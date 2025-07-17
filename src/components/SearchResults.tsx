@@ -1,9 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { X, ExternalLink, Clock } from "lucide-react";
+import { X, ExternalLink, Clock, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { AISearchService } from "@/services/AISearchService";
+import { useToast } from "@/hooks/use-toast";
 
 interface SearchResult {
   id: string;
@@ -17,19 +19,44 @@ interface SearchResult {
 interface SearchResultsProps {
   query: string;
   onClose: () => void;
+  useAI?: boolean;
 }
 
-const SearchResults = ({ query, onClose }: SearchResultsProps) => {
+const SearchResults = ({ query, onClose, useAI = false }: SearchResultsProps) => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Simulate API call
     const fetchResults = async () => {
       setLoading(true);
+      
+      if (useAI) {
+        // Use AI search
+        const aiResponse = await AISearchService.searchWithAI(query);
+        
+        if (aiResponse.success && aiResponse.results) {
+          setResults(aiResponse.results);
+        } else {
+          toast({
+            title: "Search Error",
+            description: aiResponse.error || "Failed to search with AI",
+            variant: "destructive",
+          });
+          // Fall back to mock results
+          await fetchMockResults();
+        }
+      } else {
+        // Use mock results
+        await fetchMockResults();
+      }
+      
+      setLoading(false);
+    };
+
+    const fetchMockResults = async () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock search results
       const mockResults: SearchResult[] = [
         {
           id: "1",
@@ -66,17 +93,19 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
       ];
       
       setResults(mockResults);
-      setLoading(false);
     };
 
     fetchResults();
-  }, [query]);
+  }, [query, useAI, toast]);
 
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">Searching for "{query}"...</h2>
+          <h2 className="text-2xl font-semibold flex items-center gap-2">
+            {useAI && <Sparkles className="h-6 w-6 text-blue-500" />}
+            Searching for "{query}"...
+          </h2>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
@@ -100,8 +129,14 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     <div className="max-w-4xl mx-auto animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-semibold">Search Results</h2>
-          <p className="text-gray-600">Found {results.length} results for "{query}"</p>
+          <h2 className="text-2xl font-semibold flex items-center gap-2">
+            {useAI && <Sparkles className="h-6 w-6 text-blue-500" />}
+            Search Results
+          </h2>
+          <p className="text-gray-600">
+            Found {results.length} results for "{query}"
+            {useAI && <span className="text-blue-600 font-medium"> (AI-powered)</span>}
+          </p>
         </div>
         <Button variant="ghost" size="sm" onClick={onClose}>
           <X className="h-4 w-4" />

@@ -1,21 +1,38 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, User, LogIn, UserPlus } from "lucide-react";
+import { Search, User, LogIn, UserPlus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import Navigation from "@/components/Navigation";
 import SearchResults from "@/components/SearchResults";
+import APIKeyInput from "@/components/APIKeyInput";
 import { useAuth } from "@/contexts/AuthContext";
+import { AISearchService } from "@/services/AISearchService";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
+  const [useAI, setUseAI] = useState(false);
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const { user, isAuthenticated } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    if (searchQuery.trim()) {
+      if (useAI && !AISearchService.getApiKey()) {
+        setShowApiKeyInput(true);
+        return;
+      }
+      setShowResults(true);
+    }
+  };
+
+  const handleApiKeySet = () => {
+    setShowApiKeyInput(false);
     if (searchQuery.trim()) {
       setShowResults(true);
     }
@@ -37,28 +54,59 @@ const Index = () => {
           </p>
         </div>
 
+        {/* API Key Input */}
+        {showApiKeyInput && (
+          <APIKeyInput onApiKeySet={handleApiKeySet} />
+        )}
+
         {/* Search Section */}
         <div className="max-w-2xl mx-auto mb-12">
           <Card className="border-0 shadow-2xl bg-white/80 backdrop-blur-sm">
             <CardContent className="p-6">
-              <form onSubmit={handleSearch} className="flex gap-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input
-                    type="text"
-                    placeholder="Search for anything..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 h-12 text-lg border-0 focus-visible:ring-2 focus-visible:ring-blue-500"
-                  />
+              <form onSubmit={handleSearch} className="space-y-4">
+                <div className="flex gap-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                    <Input
+                      type="text"
+                      placeholder="Search for anything..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 h-12 text-lg border-0 focus-visible:ring-2 focus-visible:ring-blue-500"
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    size="lg"
+                    className="h-12 px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
+                  >
+                    Search
+                  </Button>
                 </div>
-                <Button 
-                  type="submit" 
-                  size="lg"
-                  className="h-12 px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
-                >
-                  Search
-                </Button>
+                
+                {/* AI Toggle */}
+                <div className="flex items-center justify-center space-x-3 pt-2">
+                  <Label htmlFor="ai-mode" className="text-sm font-medium">
+                    Regular Search
+                  </Label>
+                  <Switch
+                    id="ai-mode"
+                    checked={useAI}
+                    onCheckedChange={setUseAI}
+                  />
+                  <Label htmlFor="ai-mode" className="text-sm font-medium flex items-center gap-1">
+                    <Sparkles className="h-4 w-4 text-blue-500" />
+                    AI-Powered Search
+                  </Label>
+                </div>
+                
+                {useAI && (
+                  <p className="text-xs text-center text-gray-500">
+                    {AISearchService.getApiKey() 
+                      ? "AI search is ready!" 
+                      : "You'll need to set your OpenAI API key for AI search."}
+                  </p>
+                )}
               </form>
             </CardContent>
           </Card>
@@ -66,7 +114,11 @@ const Index = () => {
 
         {/* Search Results */}
         {showResults && (
-          <SearchResults query={searchQuery} onClose={() => setShowResults(false)} />
+          <SearchResults 
+            query={searchQuery} 
+            onClose={() => setShowResults(false)}
+            useAI={useAI}
+          />
         )}
 
         {/* Features Section */}
@@ -84,22 +136,20 @@ const Index = () => {
           <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white/60 backdrop-blur-sm">
             <CardContent className="p-6 text-center">
               <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <User className="h-8 w-8 text-white" />
+                <Sparkles className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Personal Account</h3>
-              <p className="text-gray-600">Save searches and access personalized results</p>
+              <h3 className="text-xl font-semibold mb-2">AI-Powered Results</h3>
+              <p className="text-gray-600">Get intelligent, contextual search results powered by AI</p>
             </CardContent>
           </Card>
 
           <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white/60 backdrop-blur-sm">
             <CardContent className="p-6 text-center">
               <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="h-8 w-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                </svg>
+                <User className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Organized Results</h3>
-              <p className="text-gray-600">Clean, categorized results for easy browsing</p>
+              <h3 className="text-xl font-semibold mb-2">Personal Account</h3>
+              <p className="text-gray-600">Save searches and access personalized results</p>
             </CardContent>
           </Card>
         </div>
