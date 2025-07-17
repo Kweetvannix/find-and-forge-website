@@ -5,34 +5,17 @@ import { Search, User, LogIn, UserPlus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import Navigation from "@/components/Navigation";
 import SearchResults from "@/components/SearchResults";
-import APIKeyInput from "@/components/APIKeyInput";
 import { useAuth } from "@/contexts/AuthContext";
-import { AISearchService } from "@/services/AISearchService";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
-  const [useAI, setUseAI] = useState(false);
-  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const { user, isAuthenticated } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      if (useAI && !AISearchService.getApiKey()) {
-        setShowApiKeyInput(true);
-        return;
-      }
-      setShowResults(true);
-    }
-  };
-
-  const handleApiKeySet = () => {
-    setShowApiKeyInput(false);
     if (searchQuery.trim()) {
       setShowResults(true);
     }
@@ -49,15 +32,10 @@ const Index = () => {
             Discover & Search
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Find exactly what you're looking for with our powerful search engine. 
+            Find exactly what you're looking for with our AI-powered search engine. 
             {isAuthenticated ? ` Welcome back, ${user?.name}!` : " Sign in to save your searches."}
           </p>
         </div>
-
-        {/* API Key Input */}
-        {showApiKeyInput && (
-          <APIKeyInput onApiKeySet={handleApiKeySet} />
-        )}
 
         {/* Search Section */}
         <div className="max-w-2xl mx-auto mb-12">
@@ -78,35 +56,16 @@ const Index = () => {
                   <Button 
                     type="submit" 
                     size="lg"
-                    className="h-12 px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
+                    className="h-12 px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 flex items-center gap-2"
                   >
-                    Search
+                    <Sparkles className="h-4 w-4" />
+                    AI Search
                   </Button>
                 </div>
                 
-                {/* AI Toggle */}
-                <div className="flex items-center justify-center space-x-3 pt-2">
-                  <Label htmlFor="ai-mode" className="text-sm font-medium">
-                    Regular Search
-                  </Label>
-                  <Switch
-                    id="ai-mode"
-                    checked={useAI}
-                    onCheckedChange={setUseAI}
-                  />
-                  <Label htmlFor="ai-mode" className="text-sm font-medium flex items-center gap-1">
-                    <Sparkles className="h-4 w-4 text-blue-500" />
-                    AI-Powered Search
-                  </Label>
-                </div>
-                
-                {useAI && (
-                  <p className="text-xs text-center text-gray-500">
-                    {AISearchService.getApiKey() 
-                      ? "AI search is ready!" 
-                      : "You'll need to set your OpenAI API key for AI search."}
-                  </p>
-                )}
+                <p className="text-xs text-center text-gray-500">
+                  Powered by advanced AI for intelligent search results
+                </p>
               </form>
             </CardContent>
           </Card>
@@ -117,7 +76,7 @@ const Index = () => {
           <SearchResults 
             query={searchQuery} 
             onClose={() => setShowResults(false)}
-            useAI={useAI}
+            useAI={true}
           />
         )}
 

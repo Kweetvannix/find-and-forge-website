@@ -22,7 +22,7 @@ interface SearchResultsProps {
   useAI?: boolean;
 }
 
-const SearchResults = ({ query, onClose, useAI = false }: SearchResultsProps) => {
+const SearchResults = ({ query, onClose, useAI = true }: SearchResultsProps) => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -31,23 +31,18 @@ const SearchResults = ({ query, onClose, useAI = false }: SearchResultsProps) =>
     const fetchResults = async () => {
       setLoading(true);
       
-      if (useAI) {
-        // Use AI search
-        const aiResponse = await AISearchService.searchWithAI(query);
-        
-        if (aiResponse.success && aiResponse.results) {
-          setResults(aiResponse.results);
-        } else {
-          toast({
-            title: "Search Error",
-            description: aiResponse.error || "Failed to search with AI",
-            variant: "destructive",
-          });
-          // Fall back to mock results
-          await fetchMockResults();
-        }
+      // Always use AI search now
+      const aiResponse = await AISearchService.searchWithAI(query);
+      
+      if (aiResponse.success && aiResponse.results) {
+        setResults(aiResponse.results);
       } else {
-        // Use mock results
+        toast({
+          title: "Search Error",
+          description: aiResponse.error || "Failed to search with AI",
+          variant: "destructive",
+        });
+        // Fall back to mock results if AI search fails
         await fetchMockResults();
       }
       
@@ -96,15 +91,15 @@ const SearchResults = ({ query, onClose, useAI = false }: SearchResultsProps) =>
     };
 
     fetchResults();
-  }, [query, useAI, toast]);
+  }, [query, toast]);
 
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold flex items-center gap-2">
-            {useAI && <Sparkles className="h-6 w-6 text-blue-500" />}
-            Searching for "{query}"...
+            <Sparkles className="h-6 w-6 text-blue-500 animate-pulse" />
+            AI is searching for "{query}"...
           </h2>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -130,12 +125,11 @@ const SearchResults = ({ query, onClose, useAI = false }: SearchResultsProps) =>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-semibold flex items-center gap-2">
-            {useAI && <Sparkles className="h-6 w-6 text-blue-500" />}
-            Search Results
+            <Sparkles className="h-6 w-6 text-blue-500" />
+            AI Search Results
           </h2>
           <p className="text-gray-600">
-            Found {results.length} results for "{query}"
-            {useAI && <span className="text-blue-600 font-medium"> (AI-powered)</span>}
+            Found {results.length} AI-powered results for "{query}"
           </p>
         </div>
         <Button variant="ghost" size="sm" onClick={onClose}>
