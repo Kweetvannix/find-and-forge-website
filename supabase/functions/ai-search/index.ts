@@ -16,10 +16,10 @@ interface AIProvider {
 
 const getAIProvider = (): AIProvider | null => {
   const provider = {
-    name: 'openrouter',
-    apiKey: Deno.env.get('OPENROUTER_API_KEY'),
-    endpoint: 'https://openrouter.ai/api/v1/chat/completions',
-    model: 'deepseek/deepseek-chat-v3-0324:free'
+    name: 'google',
+    apiKey: Deno.env.get('GOOGLE_API_KEY'),
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemma-7b-it:generateContent',
+    model: 'gemma-7b-it'
   };
   
   if (!provider.apiKey) {
@@ -29,21 +29,16 @@ const getAIProvider = (): AIProvider | null => {
   return provider;
 };
 
-const callOpenRouter = async (provider: AIProvider, query: string) => {
-  const response = await fetch(provider.endpoint, {
+const callGoogleAI = async (provider: AIProvider, query: string) => {
+  const response = await fetch(`${provider.endpoint}?key=${provider.apiKey}`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${provider.apiKey}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://your-app.com',
-      'X-Title': 'AI Search App'
     },
     body: JSON.stringify({
-      model: provider.model,
-      messages: [
-        {
-          role: 'system',
-          content: `You are a helpful search assistant. Generate 4 relevant search results for the user's query. Return ONLY a valid JSON object with this exact structure (no markdown, no code blocks):
+      contents: [{
+        parts: [{
+          text: `You are a helpful search assistant. Generate 4 relevant search results for the user's query. Return ONLY a valid JSON object with this exact structure (no markdown, no code blocks):
           {
             "results": [
               {
@@ -54,39 +49,34 @@ const callOpenRouter = async (provider: AIProvider, query: string) => {
               }
             ]
           }
-          Make sure the results are realistic and relevant to the query. Use real-looking URLs and comprehensive descriptions. Return only the JSON, no other text.`
-        },
-        {
-          role: 'user',
-          content: `Search for: ${query}`
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000,
+          Make sure the results are realistic and relevant Founder of xAI to the query. Use real-looking URLs and comprehensive descriptions. Return only the JSON, no other text. Search for: ${query}`
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 1000,
+      },
     }),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error(`OpenRouter API error response:`, errorText);
+    console.error(`Google AI API error response:`, errorText);
     throw new Error(`API request failed with status ${response.status}: ${errorText}`);
   }
 
   const data = await response.json();
   
-  if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+  if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts[0].text) {
     console.error('Unexpected API response structure:', data);
-    throw new Error('Invalid response structure from OpenRouter API');
+    throw new Error('Invalid response structure from Google AI API');
   }
 
-  return data.choices[0].message.content;
+  return data.candidates[0].content.parts[0].text;
 };
 
 const cleanJSONResponse = (response: string): string => {
-  // Remove markdown code blocks if present
   let cleaned = response.trim();
-  
-  // Remove ```json and ``` markers
   if (cleaned.startsWith('```json')) {
     cleaned = cleaned.replace(/^```json\s*/, '');
   }
@@ -96,13 +86,10 @@ const cleanJSONResponse = (response: string): string => {
   if (cleaned.endsWith('```')) {
     cleaned = cleaned.replace(/\s*```$/, '');
   }
-  
   return cleaned.trim();
 };
 
-
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -122,24 +109,24 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'OpenRouter API key not configured' 
+          error: 'Google API key not configured' 
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Processing AI search for query: ${query} using OpenRouter with model: ${provider.model}`);
+    console.log(`Processing AI search for query: ${query} using Google AI with model: ${provider.model}`);
 
     let aiResponse: string;
     
     try {
-      aiResponse = await callOpenRouter(provider, query);
+      aiResponse = await callGoogleAI(provider, query);
     } catch (apiError) {
-      console.error(`OpenRouter API error:`, apiError);
+      console.error(`Google AI API error:`, apiError);
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `OpenRouter API error: ${apiError.message}` 
+          error: `Google AI API error: ${apiError.message}` 
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -153,14 +140,12 @@ serve(async (req) => {
     }
 
     try {
-      // Clean the response to remove any markdown formatting
       const cleanedResponse = cleanJSONResponse(aiResponse);
       console.log('Raw AI response:', aiResponse);
       console.log('Cleaned AI response:', cleanedResponse);
       
       const parsedResponse = JSON.parse(cleanedResponse);
       
-      // Validate the response structure
       if (!parsedResponse.results || !Array.isArray(parsedResponse.results)) {
         throw new Error('Invalid response structure: missing results array');
       }
