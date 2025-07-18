@@ -43,7 +43,7 @@ const callOpenRouter = async (provider: AIProvider, query: string) => {
       messages: [
         {
           role: 'system',
-          content: `You are a helpful search assistant. Generate 4 relevant search results for the user's query. Return the results in JSON format with this exact structure:
+          content: `You are a helpful search assistant. Generate 4 relevant search results for the user's query. Return ONLY a valid JSON object with this exact structure (no markdown, no code blocks):
           {
             "results": [
               {
@@ -54,7 +54,7 @@ const callOpenRouter = async (provider: AIProvider, query: string) => {
               }
             ]
           }
-          Make sure the results are realistic and relevant to the query. Use real-looking URLs and comprehensive descriptions.`
+          Make sure the results are realistic and relevant to the query. Use real-looking URLs and comprehensive descriptions. Return only the JSON, no other text.`
         },
         {
           role: 'user',
@@ -67,12 +67,37 @@ const callOpenRouter = async (provider: AIProvider, query: string) => {
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error?.message || `API request failed with status ${response.status}`);
+    const errorText = await response.text();
+    console.error(`OpenRouter API error response:`, errorText);
+    throw new Error(`API request failed with status ${response.status}: ${errorText}`);
   }
 
   const data = await response.json();
-  return data.choices[0]?.message?.content;
+  
+  if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+    console.error('Unexpected API response structure:', data);
+    throw new Error('Invalid response structure from OpenRouter API');
+  }
+
+  return data.choices[0].message.content;
+};
+
+const cleanJSONResponse = (response: string): string => {
+  // Remove markdown code blocks if present
+  let cleaned = response.trim();
+  
+  // Remove ```json and ``` markers
+  if (cleaned.startsWith('```json')) {
+    cleaned = cleaned.replace(/^```json\s*/, '');
+  }
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```\s*/, '');
+  }
+  if (cleaned.endsWith('```')) {
+    cleaned = cleaned.replace(/\s*```$/, '');
+  }
+  
+  return cleaned.trim();
 };
 
 
@@ -128,26 +153,41 @@ serve(async (req) => {
     }
 
     try {
-      const parsedResponse = JSON.parse(aiResponse);
+      // Clean the response to remove any markdown formatting
+      const cleanedResponse = cleanJSONResponse(aiResponse);
+      console.log('Raw AI response:', aiResponse);
+      console.log('Cleaned AI response:', cleanedResponse);
+      
+      const parsedResponse = JSON.parse(cleanedResponse);
+      
+      // Validate the response structure
+      if (!parsedResponse.results || !Array.isArray(parsedResponse.results)) {
+        throw new Error('Invalid response structure: missing results array');
+      }
+      
       const results = parsedResponse.results.map((result: any, index: number) => ({
         id: `ai-${index + 1}`,
-        title: result.title,
-        description: result.description,
-        url: result.url,
-        category: result.category,
+        title: result.title || 'Untitled',
+        description: result.description || 'No description available',
+        url: result.url || '#',
+        category: result.category || 'General',
         timestamp: new Date().toLocaleString(),
         provider: provider.name
       }));
 
-      console.log(`AI search successful using ${provider.name}, returning results:`, results.length);
+      console.log(`AI search successful using ${provider.name}, returning ${results.length} results`);
       return new Response(
         JSON.stringify({ success: true, results, provider: provider.name }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } catch (parseError) {
       console.error('Error parsing AI response:', parseError);
+      console.error('Raw response that failed to parse:', aiResponse);
       return new Response(
-        JSON.stringify({ success: false, error: 'Failed to parse AI response' }),
+        JSON.stringify({ 
+          success: false, 
+          error: `Failed to parse AI response: ${parseError.message}` 
+        }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
