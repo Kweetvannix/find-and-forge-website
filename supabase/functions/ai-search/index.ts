@@ -22,6 +22,7 @@ const getAIProvider = (): AIProvider | null => {
   };
   
   if (!provider.apiKey) {
+    console.error('Google API key not found in environment variables');
     return null;
   }
   
@@ -29,6 +30,7 @@ const getAIProvider = (): AIProvider | null => {
 };
 
 const callGoogleAI = async (provider: AIProvider, query: string) => {
+  console.log(`Calling Google AI API with model ${provider.model} for query: ${query}`);
   const response = await fetch(`${provider.endpoint}?key=${provider.apiKey}`, {
     method: 'POST',
     headers: {
@@ -48,7 +50,7 @@ const callGoogleAI = async (provider: AIProvider, query: string) => {
               }
             ]
           }
-          Make sure the results are realistic and relevant Founder of xAI to the query. Use real-looking URLs and comprehensive descriptions. Return only the JSON, no other text. Search for: ${query}`
+          Make sure the results are realistic and relevant to the query. Use real-looking URLs and comprehensive descriptions. Return only the JSON, no other text. Search for: ${query}`
         }]
       }],
       generationConfig: {
@@ -60,14 +62,15 @@ const callGoogleAI = async (provider: AIProvider, query: string) => {
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error(`Google AI API error response:`, errorText);
+    console.error(`Google AI API error response: Status ${response.status}, ${errorText}`);
     throw new Error(`API request failed with status ${response.status}: ${errorText}`);
   }
 
   const data = await response.json();
+  console.log('Google AI API raw response:', JSON.stringify(data, null, 2));
   
   if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts[0].text) {
-    console.error('Unexpected API response structure:', data);
+    console.error('Unexpected API response structure:', JSON.stringify(data, null, 2));
     throw new Error('Invalid response structure from Google AI API');
   }
 
@@ -97,6 +100,7 @@ serve(async (req) => {
     const { query } = await req.json();
     
     if (!query) {
+      console.error('No query provided in request');
       return new Response(
         JSON.stringify({ success: false, error: 'Query is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -132,6 +136,7 @@ serve(async (req) => {
     }
     
     if (!aiResponse) {
+      console.error('No response received from Google AI API');
       return new Response(
         JSON.stringify({ success: false, error: 'No response from AI' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -146,6 +151,7 @@ serve(async (req) => {
       const parsedResponse = JSON.parse(cleanedResponse);
       
       if (!parsedResponse.results || !Array.isArray(parsedResponse.results)) {
+        console.error('Invalid response structure: missing or invalid results array');
         throw new Error('Invalid response structure: missing results array');
       }
       
