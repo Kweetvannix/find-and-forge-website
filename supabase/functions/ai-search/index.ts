@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -18,8 +17,8 @@ const getAIProvider = (): AIProvider | null => {
   const provider = {
     name: 'google',
     apiKey: Deno.env.get('GOOGLE_API_KEY'),
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemma-7b-it:generateContent',
-    model: 'gemma-7b-it'
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemma-3-27b-it:generateContent',
+    model: 'gemma-3-27b-it'
   };
   
   if (!provider.apiKey) {
