@@ -1,10 +1,10 @@
 
 import { useState, useEffect } from "react";
-import { X, ExternalLink, Clock, Sparkles } from "lucide-react";
+import { X, ExternalLink, Clock, Sparkles, Bot, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AISearchService } from "@/services/AISearchService";
+import { AISearchService, AIProvider } from "@/services/AISearchService";
 import { useToast } from "@/hooks/use-toast";
 
 interface SearchResult {
@@ -14,28 +14,42 @@ interface SearchResult {
   url: string;
   category: string;
   timestamp: string;
+  provider?: string;
 }
 
 interface SearchResultsProps {
   query: string;
   onClose: () => void;
-  useAI?: boolean;
+  provider?: AIProvider;
 }
 
-const SearchResults = ({ query, onClose, useAI = true }: SearchResultsProps) => {
+const providerIcons = {
+  openai: Sparkles,
+  anthropic: Bot,
+  gemini: Zap,
+};
+
+const providerNames = {
+  openai: 'OpenAI GPT',
+  anthropic: 'Anthropic Claude',
+  gemini: 'Google Gemini',
+};
+
+const SearchResults = ({ query, onClose, provider = 'openai' }: SearchResultsProps) => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [usedProvider, setUsedProvider] = useState<string>('');
   const { toast } = useToast();
 
   useEffect(() => {
     const fetchResults = async () => {
       setLoading(true);
       
-      // Always use AI search now
-      const aiResponse = await AISearchService.searchWithAI(query);
+      const aiResponse = await AISearchService.searchWithAI(query, provider);
       
       if (aiResponse.success && aiResponse.results) {
         setResults(aiResponse.results);
+        setUsedProvider(aiResponse.provider || provider);
       } else {
         toast({
           title: "Search Error",
@@ -88,18 +102,22 @@ const SearchResults = ({ query, onClose, useAI = true }: SearchResultsProps) => 
       ];
       
       setResults(mockResults);
+      setUsedProvider('fallback');
     };
 
     fetchResults();
-  }, [query, toast]);
+  }, [query, provider, toast]);
+
+  const ProviderIcon = providerIcons[usedProvider as AIProvider] || Sparkles;
+  const providerDisplayName = providerNames[usedProvider as AIProvider] || usedProvider;
 
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-blue-500 animate-pulse" />
-            AI is searching for "{query}"...
+            <ProviderIcon className="h-6 w-6 text-blue-500 animate-pulse" />
+            {providerDisplayName} is searching for "{query}"...
           </h2>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -125,11 +143,17 @@ const SearchResults = ({ query, onClose, useAI = true }: SearchResultsProps) => 
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-semibold flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-blue-500" />
+            <ProviderIcon className="h-6 w-6 text-blue-500" />
             AI Search Results
+            {usedProvider !== 'fallback' && (
+              <Badge variant="outline" className="ml-2">
+                {providerDisplayName}
+              </Badge>
+            )}
           </h2>
           <p className="text-gray-600">
-            Found {results.length} AI-powered results for "{query}"
+            Found {results.length} results for "{query}"
+            {usedProvider !== 'fallback' && ` using ${providerDisplayName}`}
           </p>
         </div>
         <Button variant="ghost" size="sm" onClick={onClose}>
