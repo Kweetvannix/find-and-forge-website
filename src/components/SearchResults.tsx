@@ -3,7 +3,7 @@ import { X, ExternalLink, Clock, Sparkles, Bot, Zap, Network } from "lucide-reac
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AISearchService, AIProvider } from "@/services/AISearchService";
+import { AISearchService } from "@/services/AISearchService";
 import { useToast } from "@/hooks/use-toast";
 
 interface SearchResult {
@@ -19,7 +19,6 @@ interface SearchResult {
 interface SearchResultsProps {
   query: string;
   onClose: () => void;
-  provider?: AIProvider;
 }
 
 const providerIcons = {
@@ -36,7 +35,7 @@ const providerNames = {
   openrouter: 'OpenRouter',
 };
 
-const SearchResults = ({ query, onClose, provider = 'openai' }: SearchResultsProps) => {
+const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [usedProvider, setUsedProvider] = useState<string>('');
@@ -46,11 +45,11 @@ const SearchResults = ({ query, onClose, provider = 'openai' }: SearchResultsPro
     const fetchResults = async () => {
       setLoading(true);
       
-      const aiResponse = await AISearchService.searchWithAI(query, provider);
+      const aiResponse = await AISearchService.searchWithAI(query);
       
       if (aiResponse.success && aiResponse.results) {
         setResults(aiResponse.results);
-        setUsedProvider(aiResponse.provider || provider);
+        setUsedProvider(aiResponse.provider || 'OpenRouter (DeepSeek)');
       } else {
         toast({
           title: "Search Error",
@@ -107,10 +106,10 @@ const SearchResults = ({ query, onClose, provider = 'openai' }: SearchResultsPro
     };
 
     fetchResults();
-  }, [query, provider, toast]);
+  }, [query, toast]);
 
-  const ProviderIcon = providerIcons[usedProvider as AIProvider] || Sparkles;
-  const providerDisplayName = providerNames[usedProvider as AIProvider] || usedProvider;
+  const ProviderIcon = Network;
+  const providerDisplayName = usedProvider;
 
   if (loading) {
     return (

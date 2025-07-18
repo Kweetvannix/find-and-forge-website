@@ -18,15 +18,13 @@ interface SearchResult {
   provider?: string;
 }
 
-export type AIProvider = 'openai' | 'anthropic' | 'gemini' | 'openrouter';
-
 export class AISearchService {
-  static async searchWithAI(query: string, provider?: AIProvider): Promise<AISearchResponse> {
+  static async searchWithAI(query: string): Promise<AISearchResponse> {
     try {
-      console.log(`Making AI search request for query: ${query} using provider: ${provider || 'openai'}`);
+      console.log(`Making AI search request for query: ${query} using OpenRouter`);
       
       const { data, error } = await supabase.functions.invoke('ai-search', {
-        body: { query, provider }
+        body: { query }
       });
 
       if (error) {
@@ -50,12 +48,4 @@ export class AISearchService {
     }
   }
 
-  static getAvailableProviders(): { id: AIProvider; name: string; description: string }[] {
-    return [
-      { id: 'openai', name: 'OpenAI', description: 'GPT-4 powered search results' },
-      { id: 'anthropic', name: 'Anthropic', description: 'Claude powered search results' },
-      { id: 'gemini', name: 'Google Gemini', description: 'Gemini powered search results' },
-      { id: 'openrouter', name: 'OpenRouter', description: 'Access to multiple AI models' }
-    ];
-  }
 }

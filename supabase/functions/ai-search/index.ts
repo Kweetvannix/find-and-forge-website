@@ -14,86 +14,19 @@ interface AIProvider {
   model: string;
 }
 
-const getAIProvider = (providerName?: string): AIProvider | null => {
-  const providers = {
-    openai: {
-      name: 'openai',
-      apiKey: Deno.env.get('OPENAI_API_KEY'),
-      endpoint: 'https://api.openai.com/v1/chat/completions',
-      model: 'gpt-4o-mini'
-    },
-    anthropic: {
-      name: 'anthropic',
-      apiKey: Deno.env.get('ANTHROPIC_API_KEY'),
-      endpoint: 'https://api.anthropic.com/v1/messages',
-      model: 'claude-3-sonnet-20240229'
-    },
-    gemini: {
-      name: 'gemini',
-      apiKey: Deno.env.get('GEMINI_API_KEY'),
-      endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
-      model: 'gemini-pro'
-    },
-    openrouter: {
-      name: 'openrouter',
-      apiKey: Deno.env.get('OPENROUTER_API_KEY'),
-      endpoint: 'https://openrouter.ai/api/v1/chat/completions',
-      model: 'meta-llama/llama-3.1-8b-instruct:free'
-    }
+const getAIProvider = (): AIProvider | null => {
+  const provider = {
+    name: 'openrouter',
+    apiKey: Deno.env.get('OPENROUTER_API_KEY'),
+    endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+    model: 'deepseek/deepseek-chat-v3-0324:free'
   };
-
-  const selectedProvider = providerName || 'openai';
-  const provider = providers[selectedProvider as keyof typeof providers];
   
-  if (!provider || !provider.apiKey) {
+  if (!provider.apiKey) {
     return null;
   }
   
   return provider;
-};
-
-const callOpenAI = async (provider: AIProvider, query: string) => {
-  const response = await fetch(provider.endpoint, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${provider.apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: provider.model,
-      messages: [
-        {
-          role: 'system',
-          content: `You are a helpful search assistant. Generate 4 relevant search results for the user's query. Return the results in JSON format with this exact structure:
-          {
-            "results": [
-              {
-                "title": "Result title",
-                "description": "Detailed description of the result",
-                "url": "https://example.com/relevant-url",
-                "category": "Category name"
-              }
-            ]
-          }
-          Make sure the results are realistic and relevant to the query. Use real-looking URLs and comprehensive descriptions.`
-        },
-        {
-          role: 'user',
-          content: `Search for: ${query}`
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error?.message || `API request failed with status ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.choices[0]?.message?.content;
 };
 
 const callOpenRouter = async (provider: AIProvider, query: string) => {
@@ -142,80 +75,6 @@ const callOpenRouter = async (provider: AIProvider, query: string) => {
   return data.choices[0]?.message?.content;
 };
 
-const callAnthropic = async (provider: AIProvider, query: string) => {
-  const response = await fetch(provider.endpoint, {
-    method: 'POST',
-    headers: {
-      'x-api-key': provider.apiKey,
-      'Content-Type': 'application/json',
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: provider.model,
-      max_tokens: 1000,
-      messages: [
-        {
-          role: 'user',
-          content: `You are a helpful search assistant. Generate 4 relevant search results for the query: "${query}". Return the results in JSON format with this exact structure:
-          {
-            "results": [
-              {
-                "title": "Result title",
-                "description": "Detailed description of the result",
-                "url": "https://example.com/relevant-url",
-                "category": "Category name"
-              }
-            ]
-          }
-          Make sure the results are realistic and relevant to the query. Use real-looking URLs and comprehensive descriptions.`
-        }
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error?.message || `API request failed with status ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.content[0]?.text;
-};
-
-const callGemini = async (provider: AIProvider, query: string) => {
-  const response = await fetch(`${provider.endpoint}?key=${provider.apiKey}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{
-          text: `You are a helpful search assistant. Generate 4 relevant search results for the query: "${query}". Return the results in JSON format with this exact structure:
-          {
-            "results": [
-              {
-                "title": "Result title",
-                "description": "Detailed description of the result",
-                "url": "https://example.com/relevant-url",
-                "category": "Category name"
-              }
-            ]
-          }
-          Make sure the results are realistic and relevant to the query. Use real-looking URLs and comprehensive descriptions.`
-        }]
-      }],
-    }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error?.message || `API request failed with status ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.candidates[0]?.content?.parts[0]?.text;
-};
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -224,7 +83,7 @@ serve(async (req) => {
   }
 
   try {
-    const { query, provider: requestedProvider } = await req.json();
+    const { query } = await req.json();
     
     if (!query) {
       return new Response(
@@ -233,44 +92,29 @@ serve(async (req) => {
       );
     }
 
-    const provider = getAIProvider(requestedProvider);
+    const provider = getAIProvider();
     if (!provider) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `AI provider not configured or invalid. Requested: ${requestedProvider || 'openai'}` 
+          error: 'OpenRouter API key not configured' 
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Processing AI search for query: ${query} using provider: ${provider.name}`);
+    console.log(`Processing AI search for query: ${query} using OpenRouter with model: ${provider.model}`);
 
     let aiResponse: string;
     
     try {
-      switch (provider.name) {
-        case 'openai':
-          aiResponse = await callOpenAI(provider, query);
-          break;
-        case 'openrouter':
-          aiResponse = await callOpenRouter(provider, query);
-          break;
-        case 'anthropic':
-          aiResponse = await callAnthropic(provider, query);
-          break;
-        case 'gemini':
-          aiResponse = await callGemini(provider, query);
-          break;
-        default:
-          throw new Error(`Unsupported provider: ${provider.name}`);
-      }
+      aiResponse = await callOpenRouter(provider, query);
     } catch (apiError) {
-      console.error(`${provider.name} API error:`, apiError);
+      console.error(`OpenRouter API error:`, apiError);
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `${provider.name} API error: ${apiError.message}` 
+          error: `OpenRouter API error: ${apiError.message}` 
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

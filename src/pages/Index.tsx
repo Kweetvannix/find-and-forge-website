@@ -6,14 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
 import SearchResults from "@/components/SearchResults";
-import ProviderSelector from "@/components/ProviderSelector";
 import { useAuth } from "@/contexts/AuthContext";
-import { AIProvider } from "@/services/AISearchService";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState<AIProvider>('openai');
   const { user, isAuthenticated } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -68,10 +65,6 @@ const Index = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600">AI Provider:</span>
-                    <ProviderSelector 
-                      selectedProvider={selectedProvider}
-                      onProviderChange={setSelectedProvider}
-                    />
                   </div>
                   <p className="text-xs text-gray-500">
                     Powered by advanced AI for intelligent search results
@@ -87,7 +80,6 @@ const Index = () => {
           <SearchResults 
             query={searchQuery} 
             onClose={() => setShowResults(false)}
-            provider={selectedProvider}
           />
         )}
 
@@ -108,8 +100,8 @@ const Index = () => {
               <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Sparkles className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Multiple AI Providers</h3>
-              <p className="text-gray-600">Choose from OpenAI, Anthropic, or Google Gemini for your search</p>
+              <h3 className="text-xl font-semibold mb-2">DeepSeek AI</h3>
+              <p className="text-gray-600">Powered by DeepSeek's advanced AI model via OpenRouter</p>
             </CardContent>
           </Card>
 
