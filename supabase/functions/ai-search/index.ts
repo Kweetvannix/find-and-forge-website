@@ -33,6 +33,12 @@ const getAIProvider = (providerName?: string): AIProvider | null => {
       apiKey: Deno.env.get('GEMINI_API_KEY'),
       endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
       model: 'gemini-pro'
+    },
+    openrouter: {
+      name: 'openrouter',
+      apiKey: Deno.env.get('OPENROUTER_API_KEY'),
+      endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+      model: 'meta-llama/llama-3.1-8b-instruct:free'
     }
   };
 
@@ -52,6 +58,52 @@ const callOpenAI = async (provider: AIProvider, query: string) => {
     headers: {
       'Authorization': `Bearer ${provider.apiKey}`,
       'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: provider.model,
+      messages: [
+        {
+          role: 'system',
+          content: `You are a helpful search assistant. Generate 4 relevant search results for the user's query. Return the results in JSON format with this exact structure:
+          {
+            "results": [
+              {
+                "title": "Result title",
+                "description": "Detailed description of the result",
+                "url": "https://example.com/relevant-url",
+                "category": "Category name"
+              }
+            ]
+          }
+          Make sure the results are realistic and relevant to the query. Use real-looking URLs and comprehensive descriptions.`
+        },
+        {
+          role: 'user',
+          content: `Search for: ${query}`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error?.message || `API request failed with status ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.choices[0]?.message?.content;
+};
+
+const callOpenRouter = async (provider: AIProvider, query: string) => {
+  const response = await fetch(provider.endpoint, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${provider.apiKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://your-app.com',
+      'X-Title': 'AI Search App'
     },
     body: JSON.stringify({
       model: provider.model,
@@ -200,6 +252,9 @@ serve(async (req) => {
       switch (provider.name) {
         case 'openai':
           aiResponse = await callOpenAI(provider, query);
+          break;
+        case 'openrouter':
+          aiResponse = await callOpenRouter(provider, query);
           break;
         case 'anthropic':
           aiResponse = await callAnthropic(provider, query);

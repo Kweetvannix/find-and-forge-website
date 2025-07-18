@@ -18,7 +18,7 @@ interface SearchResult {
   provider?: string;
 }
 
-export type AIProvider = 'openai' | 'anthropic' | 'gemini';
+export type AIProvider = 'openai' | 'anthropic' | 'gemini' | 'openrouter';
 
 export class AISearchService {
   static async searchWithAI(query: string, provider?: AIProvider): Promise<AISearchResponse> {
@@ -54,7 +54,8 @@ export class AISearchService {
     return [
       { id: 'openai', name: 'OpenAI', description: 'GPT-4 powered search results' },
       { id: 'anthropic', name: 'Anthropic', description: 'Claude powered search results' },
-      { id: 'gemini', name: 'Google Gemini', description: 'Gemini powered search results' }
+      { id: 'gemini', name: 'Google Gemini', description: 'Gemini powered search results' },
+      { id: 'openrouter', name: 'OpenRouter', description: 'Access to multiple AI models' }
     ];
   }
 }

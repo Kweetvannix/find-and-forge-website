@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { ChevronDown, Sparkles, Bot, Zap } from "lucide-react";
+import { ChevronDown, Sparkles, Bot, Zap, Network } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AIProvider } from "@/services/AISearchService";
@@ -14,18 +14,20 @@ const providerIcons = {
   openai: Sparkles,
   anthropic: Bot,
   gemini: Zap,
+  openrouter: Network,
 };
 
 const providerNames = {
   openai: 'OpenAI GPT',
   anthropic: 'Anthropic Claude',
   gemini: 'Google Gemini',
+  openrouter: 'OpenRouter',
 };
 
 const ProviderSelector = ({ selectedProvider, onProviderChange }: ProviderSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const providers: AIProvider[] = ['openai', 'anthropic', 'gemini'];
+  const providers: AIProvider[] = ['openai', 'anthropic', 'gemini', 'openrouter'];
 
   const handleProviderSelect = (provider: AIProvider) => {
     onProviderChange(provider);

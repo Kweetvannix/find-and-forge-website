@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { X, ExternalLink, Clock, Sparkles, Bot, Zap } from "lucide-react";
+import { X, ExternalLink, Clock, Sparkles, Bot, Zap, Network } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,12 +26,14 @@ const providerIcons = {
   openai: Sparkles,
   anthropic: Bot,
   gemini: Zap,
+  openrouter: Network,
 };
 
 const providerNames = {
   openai: 'OpenAI GPT',
   anthropic: 'Anthropic Claude',
   gemini: 'Google Gemini',
+  openrouter: 'OpenRouter',
 };
 
 const SearchResults = ({ query, onClose, provider = 'openai' }: SearchResultsProps) => {
