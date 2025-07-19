@@ -66,43 +66,40 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
     const fetchMockResults = async () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      // Create a single conversational response instead of multiple results
+      const chatResponse = `Hey there! 👋 So you're asking about "${query}"? 
+
+🤔 Here's what I'm thinking about this topic:
+
+This is definitely an interesting area to explore! Based on what I know, there are several key aspects worth considering:
+
+💡 **Key Points:**
+• This topic has been gaining attention in recent research
+• There are multiple approaches and perspectives to consider
+• The latest developments show promising results
+• It's important to look at evidence-based information
+
+🔬 **What the research tells us:**
+The current literature suggests that this area is evolving rapidly, with new findings emerging regularly. Many experts are focusing on practical applications and real-world implications.
+
+🎯 **Bottom line:**
+This is a complex topic that benefits from a comprehensive understanding. I'd recommend looking into peer-reviewed sources and staying updated with the latest research developments.
+
+Want to dive deeper into any specific aspect? Just let me know! 🚀`;
+
       const mockResults: SearchResult[] = [
         {
-          id: "1",
-          title: `Best practices for ${query}`,
-          description: `Comprehensive guide covering everything you need to know about ${query}. Learn from industry experts and improve your skills.`,
-          url: `https://example.com/${query.toLowerCase().replace(/\s+/g, '-')}`,
-          category: "Guide",
-          timestamp: "2 hours ago"
-        },
-        {
-          id: "2",
-          title: `${query} - Complete Tutorial`,
-          description: `Step-by-step tutorial that will help you master ${query}. Includes practical examples and real-world applications.`,
-          url: `https://tutorial.com/${query.toLowerCase().replace(/\s+/g, '-')}`,
-          category: "Tutorial",
-          timestamp: "1 day ago"
-        },
-        {
-          id: "3",
-          title: `Advanced ${query} Techniques`,
-          description: `Take your ${query} skills to the next level with these advanced techniques and professional tips from experts.`,
-          url: `https://advanced.com/${query.toLowerCase().replace(/\s+/g, '-')}`,
-          category: "Advanced",
-          timestamp: "3 days ago"
-        },
-        {
-          id: "4",
-          title: `${query} Tools and Resources`,
-          description: `Curated collection of the best tools, resources, and utilities for ${query}. Save time and boost productivity.`,
-          url: `https://tools.com/${query.toLowerCase().replace(/\s+/g, '-')}`,
-          category: "Tools",
-          timestamp: "1 week ago"
+          id: "chat-response",
+          title: "💬 Grok-style AI Response",
+          description: chatResponse,
+          url: "#",
+          category: "💭 AI Chat",
+          timestamp: "just now"
         }
       ];
       
       setResults(mockResults);
-      setUsedProvider('fallback');
+      setUsedProvider('🤖 Grok-style AI (Offline Mode)');
     };
 
     fetchResults();
@@ -152,7 +149,7 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
             )}
           </h2>
           <p className="text-gray-600">
-            🔍 Dug up {results.length} juicy results for "{query}" 
+            🔍 Here's my take on "{query}" 
             {usedProvider !== 'fallback' && ` • Powered by ${providerDisplayName} 🚀`}
           </p>
         </div>
@@ -165,7 +162,7 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
         {results.map((result) => (
           <Card key={result.id} className="hover:shadow-lg transition-shadow duration-300 border-0 shadow-md bg-white/80 backdrop-blur-sm">
             <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-2">
+              <div className="flex justify-between items-start mb-4">
                 <Badge variant="secondary" className="text-xs">
                   {result.category}
                 </Badge>
@@ -175,26 +172,38 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
                 </div>
               </div>
               
-              <h3 className="text-xl font-semibold text-blue-600 hover:text-blue-700 mb-2">
-                <a href={result.url} target="_blank" rel="noopener noreferrer" className="flex items-center">
-                  {result.title}
-                  <ExternalLink className="h-4 w-4 ml-1" />
-                </a>
-              </h3>
-              
-              <p className="text-gray-700 mb-3 leading-relaxed">
-                {result.description}
-              </p>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-green-600 font-medium">{result.url}</span>
-                <Button variant="outline" size="sm" asChild>
-                  <a href={result.url} target="_blank" rel="noopener noreferrer">
-                    Visit Site
-                    <ExternalLink className="h-3 w-3 ml-1" />
-                  </a>
-                </Button>
-              </div>
+              {result.id === 'chat-response' ? (
+                // Show conversational chat response
+                <div className="prose max-w-none">
+                  <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
+                    {result.description}
+                  </div>
+                </div>
+              ) : (
+                // Show regular result format (fallback)
+                <>
+                  <h3 className="text-xl font-semibold text-blue-600 hover:text-blue-700 mb-2">
+                    <a href={result.url} target="_blank" rel="noopener noreferrer" className="flex items-center">
+                      {result.title}
+                      <ExternalLink className="h-4 w-4 ml-1" />
+                    </a>
+                  </h3>
+                  
+                  <p className="text-gray-700 mb-3 leading-relaxed">
+                    {result.description}
+                  </p>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-green-600 font-medium">{result.url}</span>
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={result.url} target="_blank" rel="noopener noreferrer">
+                        Visit Site
+                        <ExternalLink className="h-3 w-3 ml-1" />
+                      </a>
+                    </Button>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         ))}
