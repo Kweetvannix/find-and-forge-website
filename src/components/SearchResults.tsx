@@ -49,11 +49,11 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
       
       if (aiResponse.success && aiResponse.results) {
         setResults(aiResponse.results);
-        setUsedProvider(aiResponse.provider || 'OpenRouter (DeepSeek)');
+        setUsedProvider('🤖 Grok-style AI (DeepSeek)');
       } else {
         toast({
-          title: "Search Error",
-          description: aiResponse.error || "Failed to search with AI",
+          title: "🚨 Oops!",
+          description: aiResponse.error || "AI search hit a snag! 😅",
           variant: "destructive",
         });
         // Fall back to mock results if AI search fails
@@ -117,7 +117,7 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold flex items-center gap-2">
             <ProviderIcon className="h-6 w-6 text-blue-500 animate-pulse" />
-            {providerDisplayName} is searching for "{query}"...
+            🤖 Hold up! Grok-style AI is cooking up some spicy results for "{query}"... ✨
           </h2>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -144,7 +144,7 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
         <div>
           <h2 className="text-2xl font-semibold flex items-center gap-2">
             <ProviderIcon className="h-6 w-6 text-blue-500" />
-            AI Search Results
+            🎯 Boom! Here's what I found
             {usedProvider !== 'fallback' && (
               <Badge variant="outline" className="ml-2">
                 {providerDisplayName}
@@ -152,8 +152,8 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
             )}
           </h2>
           <p className="text-gray-600">
-            Found {results.length} results for "{query}"
-            {usedProvider !== 'fallback' && ` using ${providerDisplayName}`}
+            🔍 Dug up {results.length} juicy results for "{query}" 
+            {usedProvider !== 'fallback' && ` • Powered by ${providerDisplayName} 🚀`}
           </p>
         </div>
         <Button variant="ghost" size="sm" onClick={onClose}>
