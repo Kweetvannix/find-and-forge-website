@@ -15,71 +15,66 @@ interface AIProvider {
 
 const getAIProvider = (): AIProvider | null => {
   const provider = {
-    name: 'openrouter',
-    apiKey: Deno.env.get('OPENROUTER_API_KEY'),
-    endpoint: 'https://openrouter.ai/api/v1/chat/completions',
-    model: 'deepseek/deepseek-chat-v3-0324:free'
+    name: 'google',
+    apiKey: Deno.env.get('GOOGLE_API_KEY'),
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemma-3-27b-it:generateContent',
+    model: 'gemma-3-27b-it'
   };
   
   if (!provider.apiKey) {
-    console.error('OpenRouter API key not found in environment variables');
+    console.error('Google API key not found in environment variables');
     return null;
   }
   
   return provider;
 };
 
-const callOpenRouterAI = async (provider: AIProvider, query: string) => {
-  console.log(`Calling OpenRouter API with model ${provider.model} for query: ${query}`);
-  const response = await fetch(provider.endpoint, {
+const callGoogleAI = async (provider: AIProvider, query: string) => {
+  console.log(`Calling Google AI API with model ${provider.model} for query: ${query}`);
+  const response = await fetch(`${provider.endpoint}?key=${provider.apiKey}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${provider.apiKey}`,
-      'HTTP-Referer': 'https://your-app.com',
-      'X-Title': 'Medical AI Search'
     },
     body: JSON.stringify({
-      model: provider.model,
-      messages: [{
-        role: 'user',
-        content: `Hey there! 🧠✨ I need you to be like Grok AI - witty, conversational, and fun! Generate 4 awesome search results for this medical query. Make them engaging with emojis and casual language. Return ONLY a valid JSON object (no markdown):
-
-        {
-          "results": [
-            {
-              "title": "🔬 Cool title with emoji",
-              "description": "Fun, conversational description that sounds like you're chatting with a friend. Include relevant emojis! Make it informative but not boring.",
-              "url": "https://real-medical-site.com/relevant-path",
-              "category": "📚 Research/💊 Treatment/🏥 Clinical/etc"
-            }
-          ]
-        }
-
-        Make it sound like Grok would write it - smart but casual, informative but entertaining! 🚀
-
-        Query: ${query}`
+      contents: [{
+        parts: [{
+          text: `You are a helpful search assistant. Generate 4 relevant search results for the user's query. Return ONLY a valid JSON object with this exact structure (no markdown, no code blocks):
+          {
+            "results": [
+              {
+                "title": "Result title",
+                "description": "Detailed description of the result",
+                "url": "https://example.com/relevant-url",
+                "category": "Category name"
+              }
+            ]
+          }
+          Make sure the results are realistic and relevant to the query. Use real-looking URLs and comprehensive descriptions. Return only the JSON, no other text. Search for: ${query}`
+        }]
       }],
-      temperature: 0.8,
-      max_tokens: 1500,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 1000,
+      },
     }),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error(`OpenRouter API error response: Status ${response.status}, ${errorText}`);
+    console.error(`Google AI API error response: Status ${response.status}, ${errorText}`);
     throw new Error(`API request failed with status ${response.status}: ${errorText}`);
   }
 
   const data = await response.json();
-  console.log('OpenRouter API raw response:', JSON.stringify(data, null, 2));
+  console.log('Google AI API raw response:', JSON.stringify(data, null, 2));
   
-  if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+  if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts[0].text) {
     console.error('Unexpected API response structure:', JSON.stringify(data, null, 2));
-    throw new Error('Invalid response structure from OpenRouter API');
+    throw new Error('Invalid response structure from Google AI API');
   }
 
-  return data.choices[0].message.content;
+  return data.candidates[0].content.parts[0].text;
 };
 
 const cleanJSONResponse = (response: string): string => {
@@ -117,24 +112,24 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'OpenRouter API key not configured' 
+          error: 'Google API key not configured' 
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Processing AI search for query: ${query} using OpenRouter with model: ${provider.model}`);
+    console.log(`Processing AI search for query: ${query} using Google AI with model: ${provider.model}`);
 
     let aiResponse: string;
     
     try {
-      aiResponse = await callOpenRouterAI(provider, query);
+      aiResponse = await callGoogleAI(provider, query);
     } catch (apiError) {
-      console.error(`OpenRouter API error:`, apiError);
+      console.error(`Google AI API error:`, apiError);
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `OpenRouter API error: ${apiError.message}` 
+          error: `Google AI API error: ${apiError.message}` 
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
