@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, User, LogIn, UserPlus, Sparkles, Network } from "lucide-react";
+import { Search, User, LogIn, UserPlus, Sparkles, Network, TrendingUp, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -82,6 +82,28 @@ const Index = () => {
             onClose={() => setShowResults(false)}
           />
         )}
+
+        {/* Medical Trends Button */}
+        <div className="text-center mb-12">
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-green-500 to-teal-600 text-white max-w-2xl mx-auto">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <Brain className="h-8 w-8" />
+                <TrendingUp className="h-8 w-8" />
+              </div>
+              <h3 className="text-2xl font-bold mb-3">Medical Research Trends</h3>
+              <p className="text-lg mb-6 opacity-90">
+                Explore cutting-edge comparisons between AI and medical professionals in diagnosis, treatment, and research
+              </p>
+              <Button asChild size="lg" variant="secondary" className="bg-white text-green-600 hover:bg-gray-100">
+                <Link to="/medical-trends">
+                  <TrendingUp className="mr-2 h-5 w-5" />
+                  View Medical AI Trends
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Features Section */}
         <div className="grid md:grid-cols-3 gap-8 mb-16">
