@@ -39,32 +39,38 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
         await new Promise(resolve => setTimeout(resolve, 800));
       }
       
-      // Simulate AI response generation
-      const aiResponse = await generateMockResponse(query);
-      setResponse(aiResponse);
+      try {
+        // Use the actual AI search service
+        const result = await AISearchService.searchWithAI(query);
+        
+        if (result.success && result.results && result.results.length > 0) {
+          // Combine all results into a conversational response
+          const combinedResponse = result.results.map(r => 
+            `**${r.title}**\n${r.description}\n`
+          ).join('\n');
+          
+          setResponse(`Hey there! 👋 Great question about "${query}"!\n\n🎯 **Here's what I found:**\n\n${combinedResponse}\n\n**My Take:**\nBased on the search results above, this is a really interesting topic with multiple perspectives worth considering. The information I've gathered should give you a solid foundation to understand the subject better.\n\n**Bottom Line:**\nHope this helps! Feel free to ask if you want me to dive deeper into any specific aspect. 🚀`);
+        } else {
+          throw new Error(result.error || 'No results found');
+        }
+      } catch (error) {
+        console.error('AI search error:', error);
+        toast({
+          title: "Search Error",
+          description: "There was an issue with the AI search. Please try again.",
+          variant: "destructive",
+        });
+        
+        // Fallback response
+        setResponse(`Hey there! 👋 I encountered an issue searching for "${query}".\n\n🔧 **What happened:**\nThere seems to be a temporary issue with the AI search service. This could be due to API connectivity or configuration.\n\n💡 **What you can try:**\n• Check if the Google API key is properly configured\n• Try a different search query\n• Wait a moment and try again\n\n🤖 **Technical note:**\nThe search service uses Google's Gemma AI model to provide intelligent responses. Make sure the API credentials are set up correctly.\n\nSorry for the inconvenience! 🙏`);
+      }
+      
       setShowThinking(false);
       setLoading(false);
     };
 
-    const generateMockResponse = async (query: string): Promise<string> => {
-      // Mock AI response generation with typing effect
-      const responses = {
-        default: `Hey there! 👋 Great question about "${query}"!\n\n🎯 **Here's what I found:**\n\nBased on my analysis, this is a really interesting topic that touches on several key areas. Let me break this down for you in a way that's actually useful:\n\n**Key Points:**\n• This subject has been gaining significant attention recently\n• There are multiple perspectives worth considering\n• The practical applications are quite fascinating\n\n**My Take:**\nWhat's really cool about this is how it connects to broader trends we're seeing. The research suggests that understanding this concept can really help with making informed decisions.\n\n**Bottom Line:**\nThis is definitely worth exploring further! The implications are pretty significant, and I think you're asking exactly the right questions here.\n\nWant me to dive deeper into any specific aspect? I'm here to help! 🚀`,
-        
-        medical: `🩺 **Medical AI Analysis for "${query}"**\n\nHey! Really solid question about medical stuff. Let me break this down based on the latest research and clinical findings:\n\n🔬 **Current State:**\n• AI diagnostic accuracy has improved dramatically (85-95% in many areas)\n• Machine learning models are now assisting doctors in real-time\n• Patient outcomes are showing measurable improvements\n\n🏥 **Real-World Impact:**\nWhat's happening in hospitals right now is honestly pretty amazing. AI systems are helping catch things human doctors might miss, especially in radiology and pathology.\n\n⚡ **The Game Changer:**\nThe speed is incredible - what used to take hours now takes minutes. But here's the thing: it's not replacing doctors, it's making them superhuman.\n\n🎯 **Bottom Line:**\nWe're seeing a 40-60% reduction in diagnostic errors when AI and human expertise work together. That's thousands of lives saved annually.\n\nThis is just the beginning - the next 5 years are going to be wild! 🚀\n\nNeed me to dig into any specific medical area?`
-      };
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (query.toLowerCase().includes('medical') || query.toLowerCase().includes('health') || query.toLowerCase().includes('doctor')) {
-        return responses.medical;
-      }
-      
-      return responses.default;
-    };
-
     fetchResults();
-  }, [query]);
+  }, [query, toast]);
 
   if (loading) {
     return (
@@ -129,7 +135,7 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
             </div>
             <div>
               <div className="font-semibold text-lg">AI Assistant</div>
-              <Badge variant="outline">Powered by Advanced AI</Badge>
+              <Badge variant="outline">Powered by Google Gemma AI</Badge>
             </div>
           </div>
           

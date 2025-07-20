@@ -68,7 +68,7 @@ const Index = () => {
                     <span className="text-sm text-gray-600">AI Provider:</span>
                   </div>
                   <p className="text-xs text-gray-500">
-                    Powered by advanced AI for intelligent search results
+                    Powered by Google Gemma AI for intelligent search results
                   </p>
                 </div>
               </form>
@@ -83,50 +83,6 @@ const Index = () => {
             onClose={() => setShowResults(false)}
           />
         )}
-
-        {/* AI News Feed Button */}
-        <div className="text-center mb-12">
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-orange-500 to-red-600 text-white max-w-2xl mx-auto">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <Newspaper className="h-8 w-8" />
-                <Zap className="h-8 w-8" />
-              </div>
-              <h3 className="text-2xl font-bold mb-3">Latest AI News</h3>
-              <p className="text-lg mb-6 opacity-90">
-                Stay updated with the latest breakthroughs, releases, and trends in artificial intelligence
-              </p>
-              <Button asChild size="lg" variant="secondary" className="bg-white text-orange-600 hover:bg-gray-100">
-                <Link to="/ai-news">
-                  <Newspaper className="mr-2 h-5 w-5" />
-                  Browse AI News Feed
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Medical Trends Button */}
-        <div className="text-center mb-12">
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-green-500 to-teal-600 text-white max-w-2xl mx-auto">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <Brain className="h-8 w-8" />
-                <TrendingUp className="h-8 w-8" />
-              </div>
-              <h3 className="text-2xl font-bold mb-3">Medical Research Trends</h3>
-              <p className="text-lg mb-6 opacity-90">
-                Explore cutting-edge comparisons between AI and medical professionals in diagnosis, treatment, and research
-              </p>
-              <Button asChild size="lg" variant="secondary" className="bg-white text-green-600 hover:bg-gray-100">
-                <Link to="/medical-trends">
-                  <TrendingUp className="mr-2 h-5 w-5" />
-                  View Medical AI Trends
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Features Section */}
         <div className="grid md:grid-cols-3 gap-8 mb-16">
@@ -145,8 +101,8 @@ const Index = () => {
               <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Sparkles className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">DeepSeek AI</h3>
-              <p className="text-gray-600">Powered by DeepSeek's advanced AI model via OpenRouter</p>
+              <h3 className="text-xl font-semibold mb-2">Google Gemma AI</h3>
+              <p className="text-gray-600">Powered by Google's advanced Gemma AI model</p>
             </CardContent>
           </Card>
 
