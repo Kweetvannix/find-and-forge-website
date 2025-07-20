@@ -1,6 +1,7 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, User, LogIn, UserPlus, Sparkles, Network, TrendingUp, Brain } from "lucide-react";
+import { Search, User, LogIn, UserPlus, Sparkles, Network, TrendingUp, Brain, Newspaper, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -82,6 +83,28 @@ const Index = () => {
             onClose={() => setShowResults(false)}
           />
         )}
+
+        {/* AI News Feed Button */}
+        <div className="text-center mb-12">
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-orange-500 to-red-600 text-white max-w-2xl mx-auto">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <Newspaper className="h-8 w-8" />
+                <Zap className="h-8 w-8" />
+              </div>
+              <h3 className="text-2xl font-bold mb-3">Latest AI News</h3>
+              <p className="text-lg mb-6 opacity-90">
+                Stay updated with the latest breakthroughs, releases, and trends in artificial intelligence
+              </p>
+              <Button asChild size="lg" variant="secondary" className="bg-white text-orange-600 hover:bg-gray-100">
+                <Link to="/ai-news">
+                  <Newspaper className="mr-2 h-5 w-5" />
+                  Browse AI News Feed
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Medical Trends Button */}
         <div className="text-center mb-12">
