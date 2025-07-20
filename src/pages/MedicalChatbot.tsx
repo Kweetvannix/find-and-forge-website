@@ -20,7 +20,7 @@ const MedicalChatbot = () => {
     {
       id: '1',
       type: 'bot',
-      content: "Hello! I'm your AI medical assistant. Please describe your symptoms and I'll help you understand possible conditions and suggest follow-up questions. Please note: This is for informational purposes only and should not replace professional medical advice.",
+      content: "Hello! I'm your AI medical assistant. Please describe a single symptom you're experiencing, and I'll ask you follow-up questions to better understand it. Remember: This is for informational purposes only and should not replace professional medical advice.",
       timestamp: new Date()
     }
   ]);
@@ -44,20 +44,35 @@ const MedicalChatbot = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke('ai-search', {
-        body: { query: `Medical consultation: ${currentMessage}. Please provide possible diagnoses, follow-up questions, and recommendations. Be thorough but remind that this is not a substitute for professional medical care.` }
+        body: { 
+          query: `You are a helpful AI assistant designed to ask follow-up questions about a single reported symptom to gather more information. Your goal is to understand the symptom better by asking clear, concise, and relevant questions.
+
+The user has reported this symptom: "${currentMessage}"
+
+Your task is to generate 3-5 follow-up questions that would help clarify the nature, severity, duration, and any associated factors of this specific symptom. Do not ask about other symptoms or potential diagnoses. Focus solely on the symptom provided.
+
+Please format your response as a numbered list of questions, and keep each question clear and concise. After the questions, provide a brief, empathetic closing statement reminding the user that this is for informational purposes only.
+
+Example format:
+1. [Question about the nature of the symptom]
+2. [Question about duration]
+3. [Question about severity]
+4. [Question about triggers or relieving factors]
+5. [Question about associated factors]
+
+Remember: Focus only on understanding the reported symptom better, not on diagnosing or suggesting other symptoms to consider.` 
+        }
       });
 
       if (error) throw error;
 
       if (data && data.success && data.results) {
-        const aiResponse = data.results.map(r => 
-          `**${r.title}**\n${r.description}`
-        ).join('\n\n');
+        const aiResponse = data.results.map(r => r.description).join(' ');
 
         const botMessage: Message = {
           id: (Date.now() + 1).toString(),
           type: 'bot',
-          content: aiResponse || "I apologize, but I couldn't process your symptoms at the moment. Please try again or consult with a healthcare professional.",
+          content: aiResponse || "I apologize, but I couldn't process your symptom at the moment. Please try again or consult with a healthcare professional.",
           timestamp: new Date()
         };
 
