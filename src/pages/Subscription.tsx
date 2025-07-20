@@ -74,7 +74,7 @@ const Subscription = () => {
       period: 'custom pricing',
       description: 'Tailored for your needs',
       icon: <Crown className="h-6 w-6" />,
-      color: 'from-gradient-to-r from-orange-500 to-red-600',
+      color: 'from-orange-500 to-red-600',
       features: [
         'Best AI models available',
         'Unlimited credits',

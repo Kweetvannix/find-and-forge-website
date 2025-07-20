@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } = useToast";
+import { useToast } from "@/hooks/use-toast";
 
 interface SearchResultsProps {
   query: string;
@@ -49,12 +49,10 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
         }
 
         if (data && data.success && data.results && data.results.length > 0) {
-          // Get the AI-generated response from the results
-          const aiResponse = data.results.map(r => 
-            `**${r.title}**\n${r.description}\n`
-          ).join('\n');
+          // Create a conversational response using the AI results
+          const aiResponse = data.results.map(r => r.description).join(' ');
           
-          setResponse(`Hey there! 👋 Great question about "${query}"!\n\n🎯 **Here's what I found using Google Gemma AI:**\n\n${aiResponse}\n\n**My Analysis:**\nBased on my AI processing, this information should give you a comprehensive understanding of your query. The response above was generated using Google's Gemma AI model to provide you with accurate and helpful information.\n\n**Powered by:**\n🤖 Google Gemma AI Model\n⚡ Advanced language processing\n🎯 Contextual understanding\n\nHope this helps! Feel free to ask another question. 🚀`);
+          setResponse(`Hey there! 👋 Great question about "${query}"!\n\n🎯 **Here's what I found using Google Gemma AI:**\n\n${aiResponse}\n\n**My Analysis:**\nBased on my AI processing with Google's Gemma model, this information should give you a comprehensive understanding of your query. The response above was generated using advanced language processing to provide you with accurate and helpful information.\n\n**Powered by:**\n🤖 Google Gemma AI Model\n⚡ Advanced language processing\n🎯 Contextual understanding\n\nHope this helps! Feel free to ask another question. 🚀`);
         } else {
           throw new Error('No results from AI');
         }
