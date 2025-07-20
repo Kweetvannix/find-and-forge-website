@@ -4,8 +4,8 @@ import { X, Brain, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AISearchService } from "@/services/AISearchService";
-import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } = useToast";
 
 interface SearchResultsProps {
   query: string;
@@ -16,7 +16,6 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
   const [response, setResponse] = useState<string>("");
   const [thinking, setThinking] = useState<string>("");
   const [loading, setLoading] = useState(true);
-  const [showThinking, setShowThinking] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -28,30 +27,36 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
       // Simulate thinking process
       const thinkingSteps = [
         "🤔 Analyzing your question...",
-        "🔍 Searching through knowledge base...",
-        "💭 Processing information...",
-        "🧠 Formulating comprehensive response...",
-        "✨ Almost ready with your answer..."
+        "🔍 Connecting to Gemma AI...",
+        "💭 Processing with Google AI...",
+        "🧠 Generating response...",
+        "✨ Almost ready..."
       ];
       
       for (let i = 0; i < thinkingSteps.length; i++) {
         setThinking(thinkingSteps[i]);
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise(resolve => setTimeout(resolve, 600));
       }
       
       try {
-        // Use the actual AI search service
-        const result = await AISearchService.searchWithAI(query);
-        
-        if (result.success && result.results && result.results.length > 0) {
-          // Combine all results into a conversational response
-          const combinedResponse = result.results.map(r => 
+        // Call the AI search service directly
+        const { data, error } = await supabase.functions.invoke('ai-search', {
+          body: { query }
+        });
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        if (data && data.success && data.results && data.results.length > 0) {
+          // Get the AI-generated response from the results
+          const aiResponse = data.results.map(r => 
             `**${r.title}**\n${r.description}\n`
           ).join('\n');
           
-          setResponse(`Hey there! 👋 Great question about "${query}"!\n\n🎯 **Here's what I found:**\n\n${combinedResponse}\n\n**My Take:**\nBased on the search results above, this is a really interesting topic with multiple perspectives worth considering. The information I've gathered should give you a solid foundation to understand the subject better.\n\n**Bottom Line:**\nHope this helps! Feel free to ask if you want me to dive deeper into any specific aspect. 🚀`);
+          setResponse(`Hey there! 👋 Great question about "${query}"!\n\n🎯 **Here's what I found using Google Gemma AI:**\n\n${aiResponse}\n\n**My Analysis:**\nBased on my AI processing, this information should give you a comprehensive understanding of your query. The response above was generated using Google's Gemma AI model to provide you with accurate and helpful information.\n\n**Powered by:**\n🤖 Google Gemma AI Model\n⚡ Advanced language processing\n🎯 Contextual understanding\n\nHope this helps! Feel free to ask another question. 🚀`);
         } else {
-          throw new Error(result.error || 'No results found');
+          throw new Error('No results from AI');
         }
       } catch (error) {
         console.error('AI search error:', error);
@@ -61,11 +66,9 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
           variant: "destructive",
         });
         
-        // Fallback response
-        setResponse(`Hey there! 👋 I encountered an issue searching for "${query}".\n\n🔧 **What happened:**\nThere seems to be a temporary issue with the AI search service. This could be due to API connectivity or configuration.\n\n💡 **What you can try:**\n• Check if the Google API key is properly configured\n• Try a different search query\n• Wait a moment and try again\n\n🤖 **Technical note:**\nThe search service uses Google's Gemma AI model to provide intelligent responses. Make sure the API credentials are set up correctly.\n\nSorry for the inconvenience! 🙏`);
+        setResponse(`Hey there! 👋 I encountered an issue searching for "${query}".\n\n🔧 **What happened:**\nThere seems to be a temporary issue with the Gemma AI service. This could be due to API connectivity or high demand.\n\n💡 **What you can try:**\n• Check your internet connection\n• Try a different search query\n• Wait a moment and try again\n• Ensure the Google API key is properly configured\n\n🤖 **Technical note:**\nThis search uses Google's Gemma AI model for intelligent responses. The service should be back online shortly.\n\nSorry for the inconvenience! 🙏`);
       }
       
-      setShowThinking(false);
       setLoading(false);
     };
 
@@ -78,7 +81,7 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold flex items-center gap-2">
             <Brain className="h-6 w-6 text-blue-500" />
-            AI is thinking about "{query}"...
+            Gemma AI is thinking about "{query}"...
           </h2>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -92,7 +95,7 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
                 <Sparkles className="h-4 w-4 text-white animate-pulse" />
               </div>
               <Badge variant="outline" className="animate-pulse">
-                Thinking...
+                Processing with Gemma AI...
               </Badge>
             </div>
             
@@ -118,7 +121,7 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
         <div>
           <h2 className="text-2xl font-semibold flex items-center gap-2">
             <Brain className="h-6 w-6 text-blue-500" />
-            AI Response
+            Gemma AI Response
           </h2>
           <p className="text-gray-600">Answer for "{query}"</p>
         </div>
@@ -134,7 +137,7 @@ const SearchResults = ({ query, onClose }: SearchResultsProps) => {
               <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div>
-              <div className="font-semibold text-lg">AI Assistant</div>
+              <div className="font-semibold text-lg">Gemma AI Assistant</div>
               <Badge variant="outline">Powered by Google Gemma AI</Badge>
             </div>
           </div>

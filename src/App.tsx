@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +10,8 @@ import Signup from "./pages/Signup";
 import MedicalTrends from "./pages/MedicalTrends";
 import AINewsFeed from "./pages/AINewsFeed";
 import NotFound from "./pages/NotFound";
+import MedicalChatbot from "./pages/MedicalChatbot";
+import Subscription from "./pages/Subscription";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,8 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/medical-trends" element={<MedicalTrends />} />
             <Route path="/ai-news" element={<AINewsFeed />} />
+            <Route path="/medical-chatbot" element={<MedicalChatbot />} />
+            <Route path="/subscription" element={<Subscription />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
