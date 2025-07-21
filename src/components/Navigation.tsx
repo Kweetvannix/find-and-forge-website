@@ -1,5 +1,6 @@
+
 import { Link } from "react-router-dom";
-import { Search, User, LogIn, LogOut, UserPlus, Newspaper, Brain, Stethoscope, CreditCard } from "lucide-react";
+import { Search, User, LogIn, LogOut, UserPlus, Newspaper, Brain, Stethoscope, CreditCard, Info, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -50,6 +51,20 @@ const Navigation = () => {
             <Link to="/subscription">
               <CreditCard className="mr-2 h-4 w-4" />
               Subscription
+            </Link>
+          </Button>
+
+          <Button asChild variant="outline" className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white border-0 hover:from-cyan-600 hover:to-blue-700">
+            <Link to="/about">
+              <Info className="mr-2 h-4 w-4" />
+              About
+            </Link>
+          </Button>
+
+          <Button asChild variant="outline" className="bg-gradient-to-r from-emerald-500 to-green-600 text-white border-0 hover:from-emerald-600 hover:to-green-700">
+            <Link to="/contact">
+              <Phone className="mr-2 h-4 w-4" />
+              Contact
             </Link>
           </Button>
         </div>

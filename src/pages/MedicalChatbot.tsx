@@ -8,13 +8,18 @@ import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import ThreeCanvas from "@/components/ThreeCanvas";
-import { TypingTracker, TypingData } from "@/components/TypingAnimation";
 
 interface Message {
   id: string;
   type: 'user' | 'bot';
   content: string;
   timestamp: Date;
+}
+
+interface AIActivityData {
+  typingSpeed: number;
+  inputLength: number;
+  isTyping: boolean;
 }
 
 const MedicalChatbot = () => {
@@ -28,22 +33,30 @@ const MedicalChatbot = () => {
   ]);
   const [currentMessage, setCurrentMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [typingData, setTypingData] = useState<TypingData>({
+  const [aiActivityData, setAiActivityData] = useState<AIActivityData>({
     typingSpeed: 0,
     inputLength: 0,
     isTyping: false
   });
   
   const { toast } = useToast();
-  const typingTrackerRef = useRef<TypingTracker | null>(null);
 
+  // Update AI activity when loading state changes
   useEffect(() => {
-    typingTrackerRef.current = new TypingTracker(setTypingData);
-    
-    return () => {
-      typingTrackerRef.current?.cleanup();
-    };
-  }, []);
+    if (isLoading) {
+      setAiActivityData({
+        typingSpeed: 5, // Simulate AI thinking speed
+        inputLength: 50, // Simulate AI processing
+        isTyping: true
+      });
+    } else {
+      setAiActivityData({
+        typingSpeed: 0,
+        inputLength: 0,
+        isTyping: false
+      });
+    }
+  }, [isLoading]);
 
   const sendMessage = async () => {
     if (!currentMessage.trim()) return;
@@ -62,7 +75,7 @@ const MedicalChatbot = () => {
     try {
       const { data, error } = await supabase.functions.invoke('ai-search', {
         body: { 
-          query: `You are a helpful AI assistant designed to ask follow-up questions about a single reported symptom to gather more information. Your goal is to understand the symptom better by asking clear, concise, and relevant questions.
+          query: `You are a helpful AI medical assistant designed to ask follow-up questions about a single reported symptom to gather more information. Your goal is to understand the symptom better by asking clear, concise, and relevant questions.
 
 The user has reported this symptom: "${currentMessage}"
 
@@ -119,8 +132,6 @@ Remember: Focus only on understanding the reported symptom better, not on diagno
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    typingTrackerRef.current?.onKeyPress();
-    
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
@@ -128,9 +139,7 @@ Remember: Focus only on understanding the reported symptom better, not on diagno
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    setCurrentMessage(value);
-    typingTrackerRef.current?.onInputChange(value.length);
+    setCurrentMessage(e.target.value);
   };
 
   return (
@@ -223,22 +232,22 @@ Remember: Focus only on understanding the reported symptom better, not on diagno
                 <div className="mb-4">
                   <h3 className="text-lg font-semibold text-gray-800 mb-2">AI Activity Monitor</h3>
                   <p className="text-sm text-gray-600">
-                    Watch the animation respond to your typing patterns
+                    Watch the animation respond to AI processing
                   </p>
                 </div>
-                <ThreeCanvas typingData={typingData} />
+                <ThreeCanvas typingData={aiActivityData} />
                 <div className="mt-4 grid grid-cols-3 gap-4 text-center">
                   <div className="p-2 bg-blue-50 rounded">
-                    <div className="text-xs text-blue-600">Typing Speed</div>
-                    <div className="text-sm font-semibold">{typingData.typingSpeed.toFixed(1)} k/s</div>
+                    <div className="text-xs text-blue-600">AI Status</div>
+                    <div className="text-sm font-semibold">{aiActivityData.isTyping ? 'Processing' : 'Idle'}</div>
                   </div>
                   <div className="p-2 bg-green-50 rounded">
-                    <div className="text-xs text-green-600">Input Length</div>
-                    <div className="text-sm font-semibold">{typingData.inputLength}</div>
+                    <div className="text-xs text-green-600">Activity Level</div>
+                    <div className="text-sm font-semibold">{aiActivityData.typingSpeed.toFixed(1)}</div>
                   </div>
                   <div className="p-2 bg-purple-50 rounded">
-                    <div className="text-xs text-purple-600">Status</div>
-                    <div className="text-sm font-semibold">{typingData.isTyping ? 'Typing' : 'Idle'}</div>
+                    <div className="text-xs text-purple-600">Processing</div>
+                    <div className="text-sm font-semibold">{aiActivityData.inputLength}</div>
                   </div>
                 </div>
               </CardContent>

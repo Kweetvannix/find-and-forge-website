@@ -1,7 +1,7 @@
 
 import { useRef, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Mesh } from 'three';
+import { Mesh, Color } from 'three';
 
 interface TypingData {
   typingSpeed: number;
@@ -30,7 +30,10 @@ const AnimatedCube: React.FC<AnimatedCubeProps> = ({ typingData }) => {
       if (meshRef.current.material && 'color' in meshRef.current.material) {
         const intensity = typingData.isTyping ? 1 : 0.5;
         const hue = (typingData.inputLength * 0.01) % 1;
-        meshRef.current.material.color.setHSL(hue, 0.7, intensity);
+        const material = meshRef.current.material as any;
+        if (material.color instanceof Color) {
+          material.color.setHSL(hue, 0.7, intensity);
+        }
       }
     }
   });
