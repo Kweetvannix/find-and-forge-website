@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,7 +25,6 @@ import Blog from "./pages/Blog";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Footer from "./components/Footer";
-import FAQ from "./pages/FAQ";
 
 const queryClient = new QueryClient();
 
@@ -44,7 +44,6 @@ const App = () => (
                 <Route path="/medical-trends" element={<MedicalTrends />} />
                 <Route path="/ai-news" element={<AINewsFeed />} />
                 <Route path="/medical-chatbot" element={<MedicalChatbot />} />
-                <Route path="/faq" element={<FAQ />} />
                 <Route path="/subscription" element={<Subscription />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />

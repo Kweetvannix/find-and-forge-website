@@ -1,23 +1,19 @@
 
 import { useState, useEffect, useRef } from "react";
-import { Send, MessageSquare, AlertTriangle, Plus } from "lucide-react";
+import { Send, Bot, User, Stethoscope } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import ThreeCanvas from "@/components/ThreeCanvas";
-import ChatMessage from "@/components/ChatMessage";
-import { MedicalReasoningService } from "@/services/MedicalReasoningService";
 
 interface Message {
   id: string;
   type: 'user' | 'bot';
   content: string;
   timestamp: Date;
-  suggestions?: string[];
-  isLoading?: boolean;
 }
 
 interface AIActivityData {
@@ -31,9 +27,8 @@ const MedicalChatbot = () => {
     {
       id: '1',
       type: 'bot',
-      content: "Hello! I'm your AI medical assistant, designed to help analyze your symptoms systematically. I'll ask targeted questions to better understand your condition and provide preliminary insights.\n\nPlease describe your main symptom or health concern, and I'll guide you through a structured assessment.\n\n⚠️ Important: This is for informational purposes only and should not replace professional medical advice.",
-      timestamp: new Date(),
-      suggestions: MedicalReasoningService.getQuickStartQuestions().slice(0, 4)
+      content: "Hello! I'm your AI medical assistant. Please describe a single symptom you're experiencing, and I'll ask you follow-up questions to better understand it. Remember: This is for informational purposes only and should not replace professional medical advice.",
+      timestamp: new Date()
     }
   ]);
   const [currentMessage, setCurrentMessage] = useState("");
@@ -44,23 +39,14 @@ const MedicalChatbot = () => {
     isTyping: false
   });
   
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   // Update AI activity when loading state changes
   useEffect(() => {
     if (isLoading) {
       setAiActivityData({
-        typingSpeed: 8,
-        inputLength: 75,
+        typingSpeed: 5, // Simulate AI thinking speed
+        inputLength: 50, // Simulate AI processing
         isTyping: true
       });
     } else {
@@ -72,13 +58,13 @@ const MedicalChatbot = () => {
     }
   }, [isLoading]);
 
-  const sendMessage = async (messageText: string = currentMessage) => {
-    if (!messageText.trim()) return;
+  const sendMessage = async () => {
+    if (!currentMessage.trim()) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
-      content: messageText,
+      content: currentMessage,
       timestamp: new Date()
     };
 
@@ -86,72 +72,63 @@ const MedicalChatbot = () => {
     setCurrentMessage("");
     setIsLoading(true);
 
-    // Add loading message
-    const loadingMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      type: 'bot',
-      content: "",
-      timestamp: new Date(),
-      isLoading: true
-    };
-    setMessages(prev => [...prev, loadingMessage]);
-
     try {
-      const medicalResponse = await MedicalReasoningService.analyzeSymptoms(messageText);
+      const { data, error } = await supabase.functions.invoke('ai-search', {
+        body: { 
+          query: `You are a helpful AI medical assistant designed to ask follow-up questions about a single reported symptom to gather more information. Your goal is to understand the symptom better by asking clear, concise, and relevant questions.
 
-      // Remove loading message and add actual response
-      setMessages(prev => {
-        const withoutLoading = prev.filter(msg => !msg.isLoading);
-        const botMessage: Message = {
-          id: (Date.now() + 2).toString(),
-          type: 'bot',
-          content: `${medicalResponse.analysis}\n\n${medicalResponse.recommendedActions.length > 0 ? '**Recommendations:**\n' + medicalResponse.recommendedActions.map(action => `• ${action}`).join('\n') : ''}`,
-          timestamp: new Date(),
-          suggestions: medicalResponse.followUpQuestions.slice(0, 3)
-        };
-        return [...withoutLoading, botMessage];
+The user has reported this symptom: "${currentMessage}"
+
+Your task is to generate 3-5 follow-up questions that would help clarify the nature, severity, duration, and any associated factors of this specific symptom. Do not ask about other symptoms or potential diagnoses. Focus solely on the symptom provided.
+
+Please format your response as a numbered list of questions, and keep each question clear and concise. After the questions, provide a brief, empathetic closing statement reminding the user that this is for informational purposes only.
+
+Example format:
+1. [Question about the nature of the symptom]
+2. [Question about duration]
+3. [Question about severity]
+4. [Question about triggers or relieving factors]
+5. [Question about associated factors]
+
+Remember: Focus only on understanding the reported symptom better, not on diagnosing or suggesting other symptoms to consider.` 
+        }
       });
 
-      // Show risk level if medium or high
-      if (medicalResponse.riskLevel === 'high') {
-        toast({
-          title: "High Priority Symptoms",
-          description: "Consider seeking immediate medical attention if symptoms are severe or worsening.",
-          variant: "destructive",
-        });
-      } else if (medicalResponse.riskLevel === 'medium') {
-        toast({
-          title: "Medical Attention Recommended",
-          description: "Consider consulting with a healthcare provider for proper evaluation.",
-        });
-      }
+      if (error) throw error;
 
-    } catch (error) {
-      console.error('Medical chatbot error:', error);
-      
-      setMessages(prev => {
-        const withoutLoading = prev.filter(msg => !msg.isLoading);
-        const errorMessage: Message = {
-          id: (Date.now() + 2).toString(),
+      if (data && data.success && data.results) {
+        const aiResponse = data.results.map(r => r.description).join(' ');
+
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
           type: 'bot',
-          content: "I apologize, but I'm having trouble processing your request right now. Please try again later or consult with a healthcare professional for immediate concerns.",
+          content: aiResponse || "I apologize, but I couldn't process your symptom at the moment. Please try again or consult with a healthcare professional.",
           timestamp: new Date()
         };
-        return [...withoutLoading, errorMessage];
-      });
 
+        setMessages(prev => [...prev, botMessage]);
+      } else {
+        throw new Error('No response from medical AI');
+      }
+    } catch (error) {
+      console.error('Medical chatbot error:', error);
       toast({
         title: "Error",
         description: "Unable to get medical response. Please try again.",
         variant: "destructive",
       });
+
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'bot',
+        content: "I'm sorry, I'm having trouble processing your request right now. Please try again later or consult with a healthcare professional for immediate concerns.",
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSuggestionClick = (suggestion: string) => {
-    sendMessage(suggestion);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -161,18 +138,8 @@ const MedicalChatbot = () => {
     }
   };
 
-  const startNewConversation = () => {
-    MedicalReasoningService.clearConversationHistory();
-    setMessages([
-      {
-        id: '1',
-        type: 'bot',
-        content: "Hello! I'm your AI medical assistant, designed to help analyze your symptoms systematically. I'll ask targeted questions to better understand your condition and provide preliminary insights.\n\nPlease describe your main symptom or health concern, and I'll guide you through a structured assessment.\n\n⚠️ Important: This is for informational purposes only and should not replace professional medical advice.",
-        timestamp: new Date(),
-        suggestions: MedicalReasoningService.getQuickStartQuestions().slice(0, 4)
-      }
-    ]);
-    setCurrentMessage("");
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setCurrentMessage(e.target.value);
   };
 
   return (
@@ -180,124 +147,111 @@ const MedicalChatbot = () => {
       <Navigation />
       
       <main className="container mx-auto px-4 pt-20 pb-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4">
               AI Medical Assistant
             </h1>
             <p className="text-gray-600 text-lg">
-              Advanced symptom analysis with systematic medical reasoning
+              Describe your symptoms and get AI-powered medical insights
             </p>
+            <div className="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-left max-w-2xl mx-auto">
+              <p className="text-sm text-yellow-800">
+                <strong>Disclaimer:</strong> This AI assistant provides general medical information and should not replace professional medical advice, diagnosis, or treatment. Always consult with qualified healthcare professionals for medical concerns.
+              </p>
+            </div>
           </div>
 
-          <Alert className="mb-6 border-yellow-200 bg-yellow-50">
-            <AlertTriangle className="h-4 w-4 text-yellow-600" />
-            <AlertDescription className="text-yellow-800">
-              <strong>Medical Disclaimer:</strong> This AI assistant provides preliminary symptom analysis for informational purposes only. It does not replace professional medical diagnosis, treatment, or advice. Always consult qualified healthcare professionals for medical concerns, especially for severe or emergency symptoms.
-            </AlertDescription>
-          </Alert>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Chat Interface */}
-            <div className="lg:col-span-2">
-              <Card className="border-0 shadow-xl bg-white">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                  <CardTitle className="text-xl font-semibold flex items-center gap-2">
-                    <MessageSquare className="h-5 w-5 text-green-600" />
-                    Medical Consultation
-                  </CardTitle>
+            <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="h-96 overflow-y-auto mb-4 space-y-4">
+                  {messages.map((message) => (
+                    <div key={message.id} className={`flex items-start gap-3 ${message.type === 'user' ? 'flex-row-reverse' : ''}`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        message.type === 'user' 
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-green-500 text-white'
+                      }`}>
+                        {message.type === 'user' ? <User className="h-4 w-4" /> : <Stethoscope className="h-4 w-4" />}
+                      </div>
+                      <div className={`flex-1 max-w-xs md:max-w-md ${message.type === 'user' ? 'text-right' : ''}`}>
+                        <div className={`p-3 rounded-lg ${
+                          message.type === 'user'
+                            ? 'bg-blue-500 text-white ml-auto'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          <div className="whitespace-pre-wrap text-sm">{message.content}</div>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {message.timestamp.toLocaleTimeString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {isLoading && (
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center">
+                        <Bot className="h-4 w-4 animate-pulse" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="bg-gray-100 p-3 rounded-lg">
+                          <div className="text-sm text-gray-600">
+                            Analyzing your symptoms...
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-3">
+                  <Textarea
+                    value={currentMessage}
+                    onChange={handleInputChange}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Describe your symptoms in detail..."
+                    className="flex-1 min-h-[80px] resize-none"
+                    disabled={isLoading}
+                  />
                   <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={startNewConversation}
-                    className="flex items-center gap-2"
+                    onClick={sendMessage}
+                    disabled={isLoading || !currentMessage.trim()}
+                    className="self-end bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
                   >
-                    <Plus className="h-4 w-4" />
-                    New Chat
+                    <Send className="h-4 w-4" />
                   </Button>
-                </CardHeader>
-                <CardContent className="p-6 pt-0">
-                  <div className="h-96 overflow-y-auto mb-4 space-y-4 scroll-smooth">
-                    {messages.map((message) => (
-                      <ChatMessage
-                        key={message.id}
-                        message={message}
-                        onSuggestionClick={handleSuggestionClick}
-                      />
-                    ))}
-                    <div ref={messagesEndRef} />
-                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-                  <div className="flex gap-3">
-                    <Textarea
-                      value={currentMessage}
-                      onChange={(e) => setCurrentMessage(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder="Describe your symptoms in detail..."
-                      className="flex-1 min-h-[80px] resize-none"
-                      disabled={isLoading}
-                    />
-                    <Button
-                      onClick={() => sendMessage()}
-                      disabled={isLoading || !currentMessage.trim()}
-                      className="self-end bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
+            {/* Three.js Animation */}
+            <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">AI Activity Monitor</h3>
+                  <p className="text-sm text-gray-600">
+                    Watch the animation respond to AI processing
+                  </p>
+                </div>
+                <ThreeCanvas typingData={aiActivityData} />
+                <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+                  <div className="p-2 bg-blue-50 rounded">
+                    <div className="text-xs text-blue-600">AI Status</div>
+                    <div className="text-sm font-semibold">{aiActivityData.isTyping ? 'Processing' : 'Idle'}</div>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Three.js Animation & Info Panel */}
-            <div className="space-y-6">
-              <Card className="border-0 shadow-xl bg-white">
-                <CardContent className="p-6">
-                  <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">AI Analysis Monitor</h3>
-                    <p className="text-sm text-gray-600">
-                      Visual feedback during symptom analysis
-                    </p>
+                  <div className="p-2 bg-green-50 rounded">
+                    <div className="text-xs text-green-600">Activity Level</div>
+                    <div className="text-sm font-semibold">{aiActivityData.typingSpeed.toFixed(1)}</div>
                   </div>
-                  <ThreeCanvas typingData={aiActivityData} />
-                  <div className="mt-4 grid grid-cols-2 gap-4 text-center">
-                    <div className="p-3 bg-blue-50 rounded-lg">
-                      <div className="text-xs text-blue-600 font-medium">Status</div>
-                      <div className="text-sm font-semibold">
-                        {aiActivityData.isTyping ? 'Analyzing' : 'Ready'}
-                      </div>
-                    </div>
-                    <div className="p-3 bg-green-50 rounded-lg">
-                      <div className="text-xs text-green-600 font-medium">Activity</div>
-                      <div className="text-sm font-semibold">
-                        {aiActivityData.typingSpeed.toFixed(1)}
-                      </div>
-                    </div>
+                  <div className="p-2 bg-purple-50 rounded">
+                    <div className="text-xs text-purple-600">Processing</div>
+                    <div className="text-sm font-semibold">{aiActivityData.inputLength}</div>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Quick Start Questions */}
-              <Card className="border-0 shadow-xl bg-white">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Common Symptoms</h3>
-                  <div className="space-y-2">
-                    {MedicalReasoningService.getQuickStartQuestions().slice(4).map((question, index) => (
-                      <Button
-                        key={index}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => sendMessage(question)}
-                        className="w-full text-left justify-start text-sm h-auto py-2 px-3"
-                        disabled={isLoading}
-                      >
-                        {question}
-                      </Button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>
