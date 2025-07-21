@@ -197,17 +197,17 @@ const MedicalTrends = () => {
               Access comprehensive databases and research platforms for the latest medical AI studies
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
-              <Button asChild variant="secondary" size="lg">
+              <Button asChild variant="secondary" size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
                 <a href="https://pubmed.ncbi.nlm.nih.gov" target="_blank" rel="noopener noreferrer">
                   PubMed Research
                 </a>
               </Button>
-              <Button asChild variant="outline" size="lg" className="text-white border-white hover:bg-white hover:text-blue-600">
+              <Button asChild variant="outline" size="lg" className="text-white border-white bg-white/10 hover:bg-white hover:text-blue-600">
                 <a href="https://www.nature.com/subjects/machine-learning" target="_blank" rel="noopener noreferrer">
                   Nature AI Studies
                 </a>
               </Button>
-              <Button asChild variant="outline" size="lg" className="text-white border-white hover:bg-white hover:text-blue-600">
+              <Button asChild variant="outline" size="lg" className="text-white border-white bg-white/10 hover:bg-white hover:text-blue-600">
                 <a href="https://www.thelancet.com/journals/landig/home" target="_blank" rel="noopener noreferrer">
                   Lancet Digital Health
                 </a>

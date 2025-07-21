@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, UserPlus, ArrowLeft } from "lucide-react";
@@ -97,7 +96,7 @@ const Signup = () => {
           </Button>
         </div>
 
-        <Card className="border-0 shadow-2xl bg-white/80 backdrop-blur-sm">
+        <Card className="border-0 shadow-2xl bg-white">
           <CardHeader className="text-center pb-6">
             <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <UserPlus className="h-8 w-8 text-white" />

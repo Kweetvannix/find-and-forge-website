@@ -15,6 +15,15 @@ import MedicalChatbot from "./pages/MedicalChatbot";
 import Subscription from "./pages/Subscription";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Safety from "./pages/Safety";
+import OurTeam from "./pages/OurTeam";
+import AdvisoryBoard from "./pages/AdvisoryBoard";
+import MedicalTeam from "./pages/MedicalTeam";
+import EditorialTeam from "./pages/EditorialTeam";
+import Business from "./pages/Business";
+import Blog from "./pages/Blog";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Footer from "./components/Footer";
 
 const queryClient = new QueryClient();
@@ -38,6 +47,15 @@ const App = () => (
                 <Route path="/subscription" element={<Subscription />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/safety" element={<Safety />} />
+                <Route path="/our-team" element={<OurTeam />} />
+                <Route path="/advisory-board" element={<AdvisoryBoard />} />
+                <Route path="/medical-team" element={<MedicalTeam />} />
+                <Route path="/editorial-team" element={<EditorialTeam />} />
+                <Route path="/business" element={<Business />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>

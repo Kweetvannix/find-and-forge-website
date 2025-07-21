@@ -11,11 +11,11 @@ const Footer = () => {
             <h3 className="text-lg font-semibold text-white mb-4">Our Company</h3>
             <ul className="space-y-2">
               <li><Link to="/about" className="hover:text-white transition-colors">About</Link></li>
-              <li><Link to="/about" className="hover:text-white transition-colors">Safety</Link></li>
-              <li><Link to="/about" className="hover:text-white transition-colors">Our team</Link></li>
-              <li><Link to="/about" className="hover:text-white transition-colors">Advisory board</Link></li>
-              <li><Link to="/about" className="hover:text-white transition-colors">Medical team</Link></li>
-              <li><Link to="/about" className="hover:text-white transition-colors">Editorial team</Link></li>
+              <li><Link to="/safety" className="hover:text-white transition-colors">Safety</Link></li>
+              <li><Link to="/our-team" className="hover:text-white transition-colors">Our team</Link></li>
+              <li><Link to="/advisory-board" className="hover:text-white transition-colors">Advisory board</Link></li>
+              <li><Link to="/medical-team" className="hover:text-white transition-colors">Medical team</Link></li>
+              <li><Link to="/editorial-team" className="hover:text-white transition-colors">Editorial team</Link></li>
               <li><Link to="/contact" className="hover:text-white transition-colors">Contact</Link></li>
             </ul>
           </div>
@@ -24,9 +24,9 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold text-white mb-4">For Business</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="hover:text-white transition-colors">Healthily.ai</a></li>
+              <li><Link to="/business" className="hover:text-white transition-colors">Healthily.ai</Link></li>
               <li><a href="#" className="hover:text-white transition-colors">Products</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+              <li><Link to="/blog" className="hover:text-white transition-colors">Blog</Link></li>
               <li><Link to="/contact" className="hover:text-white transition-colors">Contact</Link></li>
             </ul>
           </div>
@@ -35,15 +35,15 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold text-white mb-4">Legal</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="hover:text-white transition-colors">Terms of service</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Privacy policy</a></li>
+              <li><Link to="/terms-of-service" className="hover:text-white transition-colors">Terms of service</Link></li>
+              <li><Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy policy</Link></li>
               <li><a href="#" className="hover:text-white transition-colors">Cookie policy</a></li>
               <li><a href="#" className="hover:text-white transition-colors">Cookie settings</a></li>
               <li><a href="#" className="hover:text-white transition-colors">Using Healthily safely</a></li>
             </ul>
           </div>
 
-          {/* Additional */}
+          {/* Resources */}
           <div>
             <h3 className="text-lg font-semibold text-white mb-4">Resources</h3>
             <ul className="space-y-2">

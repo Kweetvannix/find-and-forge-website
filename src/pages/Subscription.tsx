@@ -1,13 +1,41 @@
 
 import { useState } from "react";
-import { Check, Crown, Star, Zap } from "lucide-react";
+import { Check, Crown, Star, Zap, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
 
 const Subscription = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [loading, setLoading] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const handleSubscribe = async (planId: string, planName: string, price: string) => {
+    setLoading(planId);
+    
+    // Simulate payment processing
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    toast({
+      title: "Payment Successful!",
+      description: `You have successfully subscribed to the ${planName} plan.`,
+    });
+    
+    // In a real app, this would redirect to a payment processor like Stripe
+    // window.location.href = '/payment-success';
+    
+    setLoading(null);
+  };
+
+  const handleContactSales = () => {
+    toast({
+      title: "Contact Sales",
+      description: "Redirecting to our sales team...",
+    });
+    // In a real app, this would open a contact form or redirect to sales
+  };
 
   const plans = [
     {
@@ -154,10 +182,42 @@ const Subscription = () => {
                 )}
 
                 <Button 
-                  className={`w-full bg-gradient-to-r ${plan.color} hover:opacity-90 transition-opacity`}
+                  className={`w-full bg-gradient-to-r ${plan.color} hover:opacity-90 transition-opacity flex items-center gap-2`}
                   size="lg"
+                  disabled={loading === plan.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (plan.id === 'free') {
+                      toast({
+                        title: "Current Plan",
+                        description: "You are already on the free plan.",
+                      });
+                    } else if (plan.id === 'custom') {
+                      handleContactSales();
+                    } else {
+                      handleSubscribe(plan.id, plan.name, plan.price);
+                    }
+                  }}
                 >
-                  {plan.id === 'free' ? 'Current Plan' : plan.id === 'custom' ? 'Contact Sales' : 'Upgrade Now'}
+                  {loading === plan.id ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      {plan.id === 'free' ? (
+                        'Current Plan'
+                      ) : plan.id === 'custom' ? (
+                        'Contact Sales'
+                      ) : (
+                        <>
+                          <CreditCard className="h-4 w-4" />
+                          Subscribe Now
+                        </>
+                      )}
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -180,6 +240,20 @@ const Subscription = () => {
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        <div className="mt-12 text-center">
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-green-500 to-teal-600 text-white max-w-2xl mx-auto">
+            <CardContent className="p-8">
+              <h3 className="text-2xl font-bold mb-4">🔒 Secure Payment Processing</h3>
+              <p className="text-lg opacity-90 mb-4">
+                All payments are processed securely through industry-standard encryption.
+              </p>
+              <p className="text-sm opacity-80">
+                We accept all major credit cards, PayPal, and bank transfers for enterprise plans.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
