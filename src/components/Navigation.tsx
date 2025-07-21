@@ -1,108 +1,108 @@
-
-import { Link } from "react-router-dom";
-import { Search, User, LogIn, LogOut, UserPlus, Newspaper, Brain, Stethoscope, CreditCard, Info, Phone } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/contexts/AuthContext";
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Menu, X, Moon, Sun } from 'lucide-react';
+import { useTheme } from "@/components/ui/theme-provider"
 
 const Navigation = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+  const { setTheme, theme } = useTheme();
+
+  const menuItems = [
+    { href: "/", label: "Home" },
+    { href: "/medical-trends", label: "Medical Trends" },
+    { href: "/ai-news", label: "AI News" },
+    { href: "/medical-chatbot", label: "Medical Chatbot" },
+    { href: "/faq", label: "FAQ" },
+    { href: "/subscription", label: "Subscription" },
+  ];
+
+  const profileMenuItems = [
+    { href: "/about", label: "About" },
+    { href: "/contact", label: "Contact" },
+  ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <Search className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              SearchApp
-            </span>
-          </Link>
+    <nav className="bg-white shadow-md sticky top-0 z-50">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        <Link to="/" className="text-2xl font-bold text-blue-600">
+          Healthily.ai
+        </Link>
 
-          <Button asChild variant="outline" className="bg-gradient-to-r from-orange-500 to-red-600 text-white border-0 hover:from-orange-600 hover:to-red-700">
-            <Link to="/ai-news">
-              <Newspaper className="mr-2 h-4 w-4" />
-              Latest AI News
+        <div className="hidden md:flex items-center space-x-6">
+          {menuItems.map((item) => (
+            <Link
+              key={item.href}
+              to={item.href}
+              className="text-gray-700 hover:text-blue-600 transition-colors"
+            >
+              {item.label}
             </Link>
-          </Button>
-
-          <Button asChild variant="outline" className="bg-gradient-to-r from-green-500 to-teal-600 text-white border-0 hover:from-green-600 hover:to-teal-700">
-            <Link to="/medical-trends">
-              <Brain className="mr-2 h-4 w-4" />
-              Medical Research Trends
-            </Link>
-          </Button>
-
-          <Button asChild variant="outline" className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 hover:from-blue-600 hover:to-indigo-700">
-            <Link to="/medical-chatbot">
-              <Stethoscope className="mr-2 h-4 w-4" />
-              Medical Chatbot
-            </Link>
-          </Button>
-
-          <Button asChild variant="outline" className="bg-gradient-to-r from-purple-500 to-pink-600 text-white border-0 hover:from-purple-600 hover:to-pink-700">
-            <Link to="/subscription">
-              <CreditCard className="mr-2 h-4 w-4" />
-              Subscription
-            </Link>
-          </Button>
-
-          <Button asChild variant="outline" className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white border-0 hover:from-cyan-600 hover:to-blue-700">
-            <Link to="/about">
-              <Info className="mr-2 h-4 w-4" />
-              About
-            </Link>
-          </Button>
-
-          <Button asChild variant="outline" className="bg-gradient-to-r from-emerald-500 to-green-600 text-white border-0 hover:from-emerald-600 hover:to-green-700">
-            <Link to="/contact">
-              <Phone className="mr-2 h-4 w-4" />
-              Contact
-            </Link>
-          </Button>
+          ))}
+          <div className="flex items-center space-x-2">
+            {profileMenuItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                {item.label}
+              </Link>
+            ))}
+            <button
+              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              {theme === "light" ? <Moon className="h-5 w-5 text-gray-700" /> : <Sun className="h-5 w-5 text-gray-700" />}
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-4">
-          {isAuthenticated ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center space-x-2">
-                  <User className="h-5 w-5" />
-                  <span>{user?.name}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={logout} className="text-red-600 cursor-pointer">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <div className="flex items-center space-x-2">
-              <Button variant="ghost" asChild>
-                <Link to="/login">
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Sign In
-                </Link>
-              </Button>
-              <Button asChild>
-                <Link to="/signup">
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Sign Up
-                </Link>
-              </Button>
-            </div>
-          )}
+        <div className="md:hidden">
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="text-gray-600 hover:text-blue-600 focus:outline-none focus:text-blue-600"
+          >
+            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
       </div>
+
+      {isOpen && (
+        <div className="bg-gray-50 py-2 md:hidden">
+          <div className="container mx-auto px-4 flex flex-col space-y-3">
+            {menuItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className="block text-gray-700 hover:text-blue-600 transition-colors py-2"
+                onClick={() => setIsOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+            {profileMenuItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className="block text-gray-700 hover:text-blue-600 transition-colors py-2"
+                onClick={() => setIsOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+            <button
+              onClick={() => {
+                setTheme(theme === "light" ? "dark" : "light");
+                setIsOpen(false);
+              }}
+              className="flex items-center space-x-2 py-2"
+            >
+              {theme === "light" ? <Moon className="h-5 w-5 text-gray-700" /> : <Sun className="h-5 w-5 text-gray-700" />}
+              <span>{theme === "light" ? "Dark Mode" : "Light Mode"}</span>
+            </button>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
